@@ -2,9 +2,11 @@ using Colossal.UI.Binding;
 using Game;
 using Game.Simulation;
 using Game.UI;
+using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -21,7 +23,7 @@ namespace InfoLoom.Systems
             public int Employable;
             public int Outside;
             public int Under;
-            public WorkforceAtLevelInfo(int _level) { Level = _level; }
+            public WorkforceAtLevelInfo(int _level) { Level = _level; Total = 0; Worker = 0; Unemployed = 0; Homeless = 0; Employable = 0; Outside = 0; Under = 0; }
         }
 
         private SimulationSystem m_SimulationSystem;
@@ -29,46 +31,81 @@ namespace InfoLoom.Systems
         private RawValueBinding m_uiResults;
         private NativeArray<WorkforceAtLevelInfo> m_Results;
 
+        private const string LOG_TAG = "[InfoLoom] WorkforceInfoLoomUISystem: ";
+
         public override GameMode gameMode => GameMode.Game;
 
         protected override void OnCreate()
         {
-            base.OnCreate();
-            m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-            m_AllAdultGroup = GetEntityQuery(new EntityQueryDesc
+            try
             {
-                All = new ComponentType[1] { ComponentType.ReadOnly<Citizen>() },
-                None = new ComponentType[3]
+                base.OnCreate();
+                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                m_AllAdultGroup = GetEntityQuery(new EntityQueryDesc
                 {
-                    ComponentType.ReadOnly<Game.Citizens.Student>(),
-                    ComponentType.ReadOnly<Deleted>(),
-                    ComponentType.ReadOnly<Temp>()
-                }
-            });
+                    All = new ComponentType[1] { ComponentType.ReadOnly<Citizen>() },
+                    None = new ComponentType[3]
+                    {
+                        ComponentType.ReadOnly<Game.Citizens.Student>(),
+                        ComponentType.ReadOnly<Deleted>(),
+                        ComponentType.ReadOnly<Temp>()
+                    }
+                });
 
-            AddBinding(m_uiResults = new RawValueBinding("populationInfo", "ilWorkforce", UpdateResults));
+                AddBinding(m_uiResults = new RawValueBinding("populationInfo", "ilWorkforce", UpdateResults));
 
-            m_Results = new NativeArray<WorkforceAtLevelInfo>(6, Allocator.Persistent);
+                m_Results = new NativeArray<WorkforceAtLevelInfo>(6, Allocator.Persistent);
+
+                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         protected override void OnUpdate()
         {
-            if (m_SimulationSystem.frameIndex % 128 != 33)
-                return;
+            try
+            {
+                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 33)
+                    return;
 
-            ResetResults();
+                ResetResults();
 
-            // Implement workforce calculation here
+                // Implement workforce calculation here
+                // This part needs to be implemented based on your specific requirements
 
-            m_uiResults.Update();
+                m_uiResults.Update();
+
+                if (Debug.isDebugBuild)
+                    Debug.Log($"{LOG_TAG}Workforce information updated successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         private void UpdateResults(IJsonWriter writer)
         {
-            writer.ArrayBegin(m_Results.Length);
-            for (int i = 0; i < m_Results.Length; i++)
-                WriteData(writer, m_Results[i]);
-            writer.ArrayEnd();
+            try
+            {
+                writer.ArrayBegin(m_Results.Length);
+                for (int i = 0; i < m_Results.Length; i++)
+                    WriteData(writer, m_Results[i]);
+                writer.ArrayEnd();
+
+                if (Debug.isDebugBuild)
+                    Debug.Log($"{LOG_TAG}Workforce data written to JSON successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error writing workforce data to JSON: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         private void WriteData(IJsonWriter writer, WorkforceAtLevelInfo info)
@@ -103,8 +140,19 @@ namespace InfoLoom.Systems
 
         protected override void OnDestroy()
         {
-            m_Results.Dispose();
-            base.OnDestroy();
+            try
+            {
+                if (m_Results.IsCreated)
+                    m_Results.Dispose();
+                
+                base.OnDestroy();
+                Debug.Log($"{LOG_TAG}System destroyed and resources cleaned up successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
+                Debug.LogException(e);
+            }
         }
     }
 }

@@ -2,9 +2,11 @@ using Colossal.UI.Binding;
 using Game;
 using Game.Simulation;
 using Game.UI;
+using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -24,7 +26,13 @@ namespace InfoLoom.Systems
             public int Employee;
             public int Open;
             public int Commuter;
-            public WorkplacesAtLevelInfo(int _level) { Level = _level; }
+            public WorkplacesAtLevelInfo(int _level) 
+            { 
+                Level = _level; 
+                Total = 0; Service = 0; Commercial = 0; Leisure = 0; 
+                Extractor = 0; Industrial = 0; Office = 0; 
+                Employee = 0; Open = 0; Commuter = 0; 
+            }
         }
 
         private SimulationSystem m_SimulationSystem;
@@ -32,51 +40,86 @@ namespace InfoLoom.Systems
         private RawValueBinding m_uiResults;
         private NativeArray<WorkplacesAtLevelInfo> m_Results;
 
+        private const string LOG_TAG = "[InfoLoom] WorkplacesInfoLoomUISystem: ";
+
         public override GameMode gameMode => GameMode.Game;
 
         protected override void OnCreate()
         {
-            base.OnCreate();
-            m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-            m_WorkplaceQuery = GetEntityQuery(new EntityQueryDesc
+            try
             {
-                All = new ComponentType[3]
+                base.OnCreate();
+                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                m_WorkplaceQuery = GetEntityQuery(new EntityQueryDesc
                 {
-                    ComponentType.ReadOnly<Employee>(),
-                    ComponentType.ReadOnly<WorkProvider>(),
-                    ComponentType.ReadOnly<PrefabRef>()
-                },
-                Any = new ComponentType[2]
-                {
-                    ComponentType.ReadOnly<PropertyRenter>(),
-                    ComponentType.ReadOnly<Building>()
-                },
-                None = new ComponentType[1] { ComponentType.ReadOnly<Temp>() }
-            });
+                    All = new ComponentType[3]
+                    {
+                        ComponentType.ReadOnly<Employee>(),
+                        ComponentType.ReadOnly<WorkProvider>(),
+                        ComponentType.ReadOnly<PrefabRef>()
+                    },
+                    Any = new ComponentType[2]
+                    {
+                        ComponentType.ReadOnly<PropertyRenter>(),
+                        ComponentType.ReadOnly<Building>()
+                    },
+                    None = new ComponentType[1] { ComponentType.ReadOnly<Temp>() }
+                });
 
-            AddBinding(m_uiResults = new RawValueBinding("workplaces", "ilWorkplaces", UpdateResults));
+                AddBinding(m_uiResults = new RawValueBinding("workplaces", "ilWorkplaces", UpdateResults));
 
-            m_Results = new NativeArray<WorkplacesAtLevelInfo>(7, Allocator.Persistent);
+                m_Results = new NativeArray<WorkplacesAtLevelInfo>(7, Allocator.Persistent);
+
+                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         protected override void OnUpdate()
         {
-            if (m_SimulationSystem.frameIndex % 128 != 22)
-                return;
+            try
+            {
+                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 22)
+                    return;
 
-            ResetResults();
+                ResetResults();
 
-            // Implement workplace calculation here
+                // Implement workplace calculation here
+                // This part needs to be implemented based on your specific requirements
 
-            m_uiResults.Update();
+                m_uiResults.Update();
+
+                if (Debug.isDebugBuild)
+                    Debug.Log($"{LOG_TAG}Workplaces information updated successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         private void UpdateResults(IJsonWriter writer)
         {
-            writer.ArrayBegin(m_Results.Length);
-            for (int i = 0; i < m_Results.Length; i++)
-                WriteData(writer, m_Results[i]);
-            writer.ArrayEnd();
+            try
+            {
+                writer.ArrayBegin(m_Results.Length);
+                for (int i = 0; i < m_Results.Length; i++)
+                    WriteData(writer, m_Results[i]);
+                writer.ArrayEnd();
+
+                if (Debug.isDebugBuild)
+                    Debug.Log($"{LOG_TAG}Workplaces data written to JSON successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error writing workplaces data to JSON: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         private void WriteData(IJsonWriter writer, WorkplacesAtLevelInfo info)
@@ -117,8 +160,19 @@ namespace InfoLoom.Systems
 
         protected override void OnDestroy()
         {
-            m_Results.Dispose();
-            base.OnDestroy();
+            try
+            {
+                if (m_Results.IsCreated)
+                    m_Results.Dispose();
+                
+                base.OnDestroy();
+                Debug.Log($"{LOG_TAG}System destroyed and resources cleaned up successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
+                Debug.LogException(e);
+            }
         }
     }
 }

@@ -1,61 +1,130 @@
-﻿using Colossal.IO.AssetDatabase;
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using Unity.Entities;
+using Colossal.IO.AssetDatabase;
 using Colossal.Logging;
 using Game;
-using Game.Input;
 using Game.Modding;
 using Game.SceneFlow;
+using Game.Prefabs;
+using Game.Economy;
+using Game.Common;
+using Game.Input;
+using HarmonyLib;
 using UnityEngine;
 
-namespace CS2_InfoLoom_Deluxe
+namespace InfoLoom_Deluxe
 {
     public class Mod : IMod
     {
-        public static ILog log = LogManager.GetLogger($"{nameof(CS2_InfoLoom_Deluxe)}.{nameof(Mod)}").SetShowsErrorsInUI(false);
-        private Setting m_Setting;
-        public static ProxyAction m_ButtonAction;
-        public static ProxyAction m_AxisAction;
-        public static ProxyAction m_VectorAction;
+        public static readonly string HarmonyId = "Infixo." + nameof(InfoLoom_Deluxe);
 
-        public const string kButtonActionName = "ButtonBinding";
-        public const string kAxisActionName = "FloatBinding";
-        public const string kVectorActionName = "Vector2Binding";
+        // Mod's instance and asset
+        public static Mod Instance { get; private set; }
+        public static ExecutableAsset ModAsset { get; private set; }
+        
+        // Logging
+        public static ILog Log = LogManager.GetLogger($"{nameof(InfoLoom_Deluxe)}").SetShowsErrorsInUI(false);
+        
+        // Setting
+        public static Setting Setting { get; private set; }
+
+        // New properties from CS2_InfoLoom_Deluxe
+        public static ProxyAction ButtonAction { get; private set; }
+        public static ProxyAction AxisAction { get; private set; }
+        public static ProxyAction VectorAction { get; private set; }
+
+        public const string ButtonActionName = "ButtonBinding";
+        public const string AxisActionName = "FloatBinding";
+        public const string VectorActionName = "Vector2Binding";
 
         public void OnLoad(UpdateSystem updateSystem)
         {
-            log.Info(nameof(OnLoad));
+            Log.Info(nameof(OnLoad));
+            Instance = this;
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
-                log.Info($"Current mod asset at {asset.path}");
+            {
+                Log.Info($"Current mod asset at {asset.path}");
+                ModAsset = asset;
+            }
 
-            m_Setting = new Setting(this);
-            m_Setting.RegisterInOptionsUI();
-            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
+            InitializeSetting();
+            InitializeLocalization();
+            ApplyHarmonyPatches();
+            RegisterSystems(updateSystem);
+            SetupInputActions();
+        }
 
-            m_Setting.RegisterKeyBindings();
+        private void InitializeSetting()
+        {
+            Setting = new Setting(this);
+            Setting.RegisterInOptionsUI();
+            Setting._Hidden = false;
+            AssetDatabase.global.LoadSettings(nameof(InfoLoom_Deluxe), Setting, new Setting(this));
+        }
 
-            m_ButtonAction = m_Setting.GetAction(kButtonActionName);
-            m_AxisAction = m_Setting.GetAction(kAxisActionName);
-            m_VectorAction = m_Setting.GetAction(kVectorActionName);
+        private void InitializeLocalization()
+        {
+            GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(Setting));
+        }
 
-            m_ButtonAction.shouldBeEnabled = true;
-            m_AxisAction.shouldBeEnabled = true;
-            m_VectorAction.shouldBeEnabled = true;
+        private void ApplyHarmonyPatches()
+        {
+            var harmony = new Harmony(HarmonyId);
+            harmony.PatchAll(typeof(Mod).Assembly);
+            var patchedMethods = harmony.GetPatchedMethods().ToArray();
+            Log.Info($"Plugin {HarmonyId} made patches! Patched methods: {patchedMethods.Length}");
+            foreach (var patchedMethod in patchedMethods)
+            {
+                Log.Info($"Patched method: {patchedMethod.Module.Name}:{patchedMethod.DeclaringType.Name}.{patchedMethod.Name}");
+            }
+        }
 
-            m_ButtonAction.onInteraction += (_, phase) => log.Info($"[{m_ButtonAction.name}] On{phase} {m_ButtonAction.ReadValue<float>()}");
-            m_AxisAction.onInteraction += (_, phase) => log.Info($"[{m_AxisAction.name}] On{phase} {m_AxisAction.ReadValue<float>()}");
-            m_VectorAction.onInteraction += (_, phase) => log.Info($"[{m_VectorAction.name}] On{phase} {m_VectorAction.ReadValue<Vector2>()}");
+        private void RegisterSystems(UpdateSystem updateSystem)
+        {
+            updateSystem.UpdateAt<Systems.BuildingDemandUISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.PopulationStructureUISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.WorkplacesInfoLoomUISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.WorkforceInfoLoomUISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.CommercialDemandUISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.ResidentialDemandUISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.IndustrialDemandUISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.TradeInfoSystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<Systems.SeparateConsumptionSystem>(SystemUpdatePhase.UIUpdate);
+        }
 
-            AssetDatabase.global.LoadSettings(nameof(CS2_InfoLoom_Deluxe), m_Setting, new Setting(this));
+        private void SetupInputActions()
+        {
+            Setting.RegisterKeyBindings();
+
+            ButtonAction = Setting.GetAction(ButtonActionName);
+            AxisAction = Setting.GetAction(AxisActionName);
+            VectorAction = Setting.GetAction(VectorActionName);
+
+            ButtonAction.shouldBeEnabled = true;
+            AxisAction.shouldBeEnabled = true;
+            VectorAction.shouldBeEnabled = true;
+
+            ButtonAction.onInteraction += (_, phase) => Log.Info($"[{ButtonAction.name}] On{phase} {ButtonAction.ReadValue<float>()}");
+            AxisAction.onInteraction += (_, phase) => Log.Info($"[{AxisAction.name}] On{phase} {AxisAction.ReadValue<float>()}");
+            VectorAction.onInteraction += (_, phase) => Log.Info($"[{VectorAction.name}] On{phase} {VectorAction.ReadValue<Vector2>()}");
         }
 
         public void OnDispose()
         {
-            log.Info(nameof(OnDispose));
-            if (m_Setting != null)
+            Log.Info(nameof(OnDispose));
+            if (Setting != null)
             {
-                m_Setting.UnregisterInOptionsUI();
-                m_Setting = null;
+                Setting.UnregisterInOptionsUI();
+                Setting = null;
             }
+
+            var harmony = new Harmony(HarmonyId);
+            harmony.UnpatchAll(HarmonyId);
+
+            Instance = null;
         }
     }
 }

@@ -1,7 +1,9 @@
-import React from 'react';
-import { Panel, InfoRow, InfoSection } from "cs2/ui";
+import React, { useState, useCallback, useMemo } from 'react';
+import { Panel, InfoRow, InfoSection, Tooltip, Scrollable } from "cs2/ui";
+import { LocalizedNumber, LocalizedString } from "cs2/l10n";
 import { useDataUpdate } from "../hooks/useDataUpdate";
-import { FocusKey } from "cs2/ui";
+import { useRem, useFormattedLargeNumber } from "cs2/utils";
+import { InputActionHints } from "cs2/input";
 
 interface WorkplacesInfo {
     level: number;
@@ -10,7 +12,7 @@ interface WorkplacesInfo {
     commercial: number;
     leisure: number;
     extractor: number;
-    industry: number;
+    industrial: number;
     office: number;
     employee: number;
     open: number;
@@ -18,62 +20,89 @@ interface WorkplacesInfo {
 }
 
 interface WorkplacesPanelProps {
-    focusKey?: FocusKey;
     onClose: () => void;
 }
 
-export const WorkplacesPanel: React.FC<WorkplacesPanelProps> = ({ focusKey, onClose }) => {
-    const [workplacesData, setWorkplacesData] = React.useState<WorkplacesInfo[]>([]);
+export const WorkplacesPanel: React.FC<WorkplacesPanelProps> = ({ onClose }) => {
+    const [workplacesData, setWorkplacesData] = useState<WorkplacesInfo[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+    const [displayMode, setDisplayMode] = useState<'total' | 'byType'>('total');
+    const [sortBy, setSortBy] = useState<keyof WorkplacesInfo>('total');
+    const rem = useRem();
 
-    useDataUpdate("workplaces.ilWorkplaces", setWorkplacesData);
+    useDataUpdate("workplaces.ilWorkplaces", (data) => {
+        setWorkplacesData(data);
+        setIsLoading(false);
+    });
 
-    const educationLevels = ['Uneducated', 'Poorly Educated', 'Educated', 'Well Educated', 'Highly Educated'];
+    const educationLevels = ['Uneducated', 'Poorly Educated', 'Educated', 'Well Educated', 'Highly Educated', 'All Levels'];
+
+    const handleLevelClick = useCallback((level: number) => {
+        setSelectedLevel(level === selectedLevel ? null : level);
+    }, [selectedLevel]);
+
+    const toggleDisplayMode = useCallback(() => {
+        setDisplayMode(prev => prev === 'total' ? 'byType' : 'total');
+    }, []);
+
+    const handleSortChange = useCallback((newSortBy: keyof WorkplacesInfo) => {
+        setSortBy(newSortBy);
+    }, []);
+
+    const sortedWorkplacesData = useMemo(() => {
+        return [...workplacesData].sort((a, b) => b[sortBy] - a[sortBy]);
+    }, [workplacesData, sortBy]);
+
+    if (isLoading) {
+        return (
+            <Panel title="WORKPLACES_STRUCTURE" onClose={onClose}>
+                <LocalizedString id="LOADING" />
+            </Panel>
+        );
+    }
 
     return (
-        <Panel title="Workplace Distribution" focusKey={focusKey} onClose={onClose}>
-            <InfoSection>
-                <InfoRow left="Education" right={<>
-                    <span>Total</span>
-                    <span>Service</span>
-                    <span>Commercial</span>
-                    <span>Leisure</span>
-                    <span>Extractor</span>
-                    <span>Industry</span>
-                    <span>Office</span>
-                    <span>Employees</span>
-                    <span>Open</span>
-                    <span>Commuters</span>
-                </>} uppercase />
-                {workplacesData.slice(0, 5).map((info, index) => (
-                    <InfoRow 
-                        key={index}
-                        left={educationLevels[index]} 
-                        right={<>
-                            <span>{info.total}</span>
-                            <span>{info.service}</span>
-                            <span>{info.commercial}</span>
-                            <span>{info.leisure}</span>
-                            <span>{info.extractor}</span>
-                            <span>{info.industry}</span>
-                            <span>{info.office}</span>
-                            <span>{info.employee}</span>
-                            <span>{info.open}</span>
-                            <span>{info.commuter}</span>
-                        </>}/>
+        <Panel title="WORKPLACES_STRUCTURE" onClose={onClose}>
+            <InputActionHints />
+            <Scrollable style={{ maxHeight: `${30 * rem}px` }}>
+                <InfoRow 
+                    left={<LocalizedString id="DISPLAY_MODE" />}
+                    right={<button onClick={toggleDisplayMode}><LocalizedString id={displayMode === 'total' ? "TOTAL_WORKPLACES" : "WORKPLACES_BY_TYPE"} /></button>}
+                />
+                <InfoRow 
+                    left={<LocalizedString id="SORT_BY" />}
+                    right={
+                        <select value={sortBy} onChange={(e) => handleSortChange(e.target.value as keyof WorkplacesInfo)}>
+                            {Object.keys(workplacesData[0]).map(key => (
+                                <option key={key} value={key}><LocalizedString id={`SORT_BY_${key.toUpperCase()}`} /></option>
+                            ))}
+                        </select>
+                    }
+                />
+                {sortedWorkplacesData.map((info, index) => (
+                    <InfoSection key={index}>
+                        <InfoRow 
+                            left={<LocalizedString id={`EDUCATION_LEVEL_${educationLevels[index].toUpperCase()}`} />} 
+                            right={useFormattedLargeNumber(info.total)} 
+                            uppercase
+                        />
+                        {selectedLevel === index && displayMode === 'byType' && (
+                            <>
+                                <InfoRow left={<LocalizedString id="SERVICE" />} right={useFormattedLargeNumber(info.service)} subRow />
+                                <InfoRow left={<LocalizedString id="COMMERCIAL" />} right={useFormattedLargeNumber(info.commercial)} subRow />
+                                <InfoRow left={<LocalizedString id="LEISURE" />} right={useFormattedLargeNumber(info.leisure)} subRow />
+                                <InfoRow left={<LocalizedString id="EXTRACTOR" />} right={useFormattedLargeNumber(info.extractor)} subRow />
+                                <InfoRow left={<LocalizedString id="INDUSTRIAL" />} right={useFormattedLargeNumber(info.industrial)} subRow />
+                                <InfoRow left={<LocalizedString id="OFFICE" />} right={useFormattedLargeNumber(info.office)} subRow />
+                                <InfoRow left={<LocalizedString id="EMPLOYEES" />} right={useFormattedLargeNumber(info.employee)} subRow />
+                                <InfoRow left={<LocalizedString id="OPEN_POSITIONS" />} right={useFormattedLargeNumber(info.open)} subRow />
+                                <InfoRow left={<LocalizedString id="COMMUTERS" />} right={useFormattedLargeNumber(info.commuter)} subRow />
+                            </>
+                        )}
+                    </InfoSection>
                 ))}
-                <InfoRow left="TOTAL" right={<>
-                    <span>{workplacesData[5]?.total}</span>
-                    <span>{workplacesData[5]?.service}</span>
-                    <span>{workplacesData[5]?.commercial}</span>
-                    <span>{workplacesData[5]?.leisure}</span>
-                    <span>{workplacesData[5]?.extractor}</span>
-                    <span>{workplacesData[5]?.industry}</span>
-                    <span>{workplacesData[5]?.office}</span>
-                    <span>{workplacesData[5]?.employee}</span>
-                    <span>{workplacesData[5]?.open}</span>
-                    <span>{workplacesData[5]?.commuter}</span>
-                </>} uppercase />
-            </InfoSection>
+            </Scrollable>
         </Panel>
     );
 };

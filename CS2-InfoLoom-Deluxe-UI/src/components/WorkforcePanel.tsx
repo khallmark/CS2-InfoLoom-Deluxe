@@ -1,7 +1,9 @@
-import React from 'react';
-import { Panel, InfoRow, InfoSection } from "cs2/ui";
+import React, { useState, useCallback, useMemo } from 'react';
+import { Panel, InfoRow, InfoSection, Tooltip, Scrollable } from "cs2/ui";
+import { LocalizedNumber, LocalizedString } from "cs2/l10n";
 import { useDataUpdate } from "../hooks/useDataUpdate";
-import { FocusKey } from "cs2/ui";
+import { useRem, useFormattedLargeNumber } from "cs2/utils";
+import { InputActionHints } from "cs2/input";
 
 interface WorkforceInfo {
     level: number;
@@ -15,37 +17,76 @@ interface WorkforceInfo {
 }
 
 interface WorkforcePanelProps {
-    focusKey?: FocusKey;
     onClose: () => void;
 }
 
-export const WorkforcePanel: React.FC<WorkforcePanelProps> = ({ focusKey, onClose }) => {
-    const [workforceData, setWorkforceData] = React.useState<WorkforceInfo[]>([]);
+export const WorkforcePanel: React.FC<WorkforcePanelProps> = ({ onClose }) => {
+    const [workforceData, setWorkforceData] = useState<WorkforceInfo[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+    const [comparisonMode, setComparisonMode] = useState<'absolute' | 'percentage'>('absolute');
+    const rem = useRem();
 
-    useDataUpdate("populationInfo.ilWorkforce", setWorkforceData);
+    useDataUpdate("populationInfo.ilWorkforce", (data) => {
+        setWorkforceData(data);
+        setIsLoading(false);
+    });
 
     const educationLevels = ['Uneducated', 'Poorly Educated', 'Educated', 'Well Educated', 'Highly Educated'];
 
+    const totalWorkforce = useMemo(() => workforceData.reduce((sum, info) => sum + info.total, 0), [workforceData]);
+
+    const handleLevelClick = useCallback((level: number) => {
+        setSelectedLevel(level === selectedLevel ? null : level);
+    }, [selectedLevel]);
+
+    const toggleComparisonMode = useCallback(() => {
+        setComparisonMode(prev => prev === 'absolute' ? 'percentage' : 'absolute');
+    }, []);
+
+    if (isLoading) {
+        return (
+            <Panel title="WORKFORCE_STRUCTURE" onClose={onClose}>
+                <LocalizedString id="LOADING" />
+            </Panel>
+        );
+    }
+
     return (
-        <Panel title="Workforce Structure" focusKey={focusKey} onClose={onClose}>
-            <InfoSection>
-                <InfoRow left="Education" right="Total" uppercase />
-                {workforceData.slice(0, 5).map((info, index) => (
-                    <React.Fragment key={index}>
-                        <InfoRow 
-                            left={educationLevels[index]} 
-                            right={`${info.total} (${((info.total / workforceData[5].total) * 100).toFixed(1)}%)`} 
-                        />
-                        <InfoRow left="Workers" right={info.worker} subRow />
-                        <InfoRow left="Unemployed" right={info.unemployed} subRow />
-                        <InfoRow left="Homeless" right={info.homeless} subRow />
-                        <InfoRow left="Employable" right={info.employable} subRow />
-                        <InfoRow left="Outside" right={info.outside} subRow />
-                        <InfoRow left="Under" right={info.under} subRow />
-                    </React.Fragment>
-                ))}
-                <InfoRow left="TOTAL" right={workforceData[5]?.total} uppercase />
-            </InfoSection>
+        <Panel title="WORKFORCE_STRUCTURE" onClose={onClose}>
+            <InputActionHints />
+            <Scrollable style={{ maxHeight: `${30 * rem}px` }}>
+                <InfoRow 
+                    left={<LocalizedString id="COMPARISON_MODE" />}
+                    right={<button onClick={toggleComparisonMode}><LocalizedString id={comparisonMode === 'absolute' ? "ABSOLUTE_VALUES" : "PERCENTAGE_VALUES"} /></button>}
+                />
+                {workforceData.map((info, index) => {
+                    const percentage = (info.total / totalWorkforce) * 100;
+                    return (
+                        <InfoSection key={index}>
+                            <InfoRow 
+                                left={<LocalizedString id={`EDUCATION_LEVEL_${educationLevels[index].toUpperCase()}`} />} 
+                                right={
+                                    comparisonMode === 'absolute' 
+                                        ? useFormattedLargeNumber(info.total)
+                                        : <LocalizedNumber value={percentage} />
+                                } 
+                                uppercase
+                            />
+                            {selectedLevel === index && (
+                                <>
+                                    <InfoRow left={<LocalizedString id="WORKERS" />} right={useFormattedLargeNumber(info.worker)} subRow />
+                                    <InfoRow left={<LocalizedString id="UNEMPLOYED" />} right={useFormattedLargeNumber(info.unemployed)} subRow />
+                                    <InfoRow left={<LocalizedString id="HOMELESS" />} right={useFormattedLargeNumber(info.homeless)} subRow />
+                                    <InfoRow left={<LocalizedString id="EMPLOYABLE" />} right={useFormattedLargeNumber(info.employable)} subRow />
+                                    <InfoRow left={<LocalizedString id="OUTSIDE_WORKERS" />} right={useFormattedLargeNumber(info.outside)} subRow />
+                                    <InfoRow left={<LocalizedString id="UNDEREMPLOYED" />} right={useFormattedLargeNumber(info.under)} subRow />
+                                </>
+                            )}
+                        </InfoSection>
+                    );
+                })}
+            </Scrollable>
         </Panel>
     );
 };

@@ -1,7 +1,9 @@
-import React from 'react';
-import { Panel, InfoRow, InfoSection } from "cs2/ui";
+import React, { useState } from 'react';
+import { Panel, InfoRow, InfoSection, Tooltip, Scrollable } from "cs2/ui";
+import { LocalizedNumber, LocalizedString } from "cs2/l10n";
 import { useDataUpdate } from "../hooks/useDataUpdate";
-import { FocusKey } from "cs2/ui";
+import { useRem, useFormattedLargeNumber } from "cs2/utils";
+import { InputActionHints } from "cs2/input";
 
 interface ResidentialData {
     properties: { low: number; medium: number; high: number };
@@ -19,99 +21,126 @@ interface ResidentialData {
 }
 
 interface ResidentialPanelProps {
-    focusKey?: FocusKey;
     onClose: () => void;
 }
 
-export const ResidentialPanel: React.FC<ResidentialPanelProps> = ({ focusKey, onClose }) => {
-    const [residentialData, setResidentialData] = React.useState<ResidentialData | null>(null);
+export const ResidentialPanel: React.FC<ResidentialPanelProps> = ({ onClose }) => {
+    const [residentialData, setResidentialData] = useState<ResidentialData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const rem = useRem();
 
-    useDataUpdate("cityInfo.ilResidential", setResidentialData);
+    useDataUpdate("cityInfo.ilResidential", (data) => {
+        setResidentialData(data);
+        setIsLoading(false);
+    });
 
-    if (!residentialData) return null;
+    if (isLoading) {
+        return (
+            <Panel title="RESIDENTIAL_DATA" onClose={onClose}>
+                <LocalizedString id="LOADING" />
+            </Panel>
+        );
+    }
 
-    const BuildingDemandSection = () => (
-        <InfoSection>
-            <InfoRow left="" right={<><span>LOW</span><span>MEDIUM</span><span>HIGH</span></>} uppercase />
-            <InfoRow left="Total properties" right={<>
-                <span>{residentialData.properties.low}</span>
-                <span>{residentialData.properties.medium}</span>
-                <span>{residentialData.properties.high}</span>
-            </>} />
-            <InfoRow left="Occupied properties" right={<>
-                <span>{residentialData.occupied.low}</span>
-                <span>{residentialData.occupied.medium}</span>
-                <span>{residentialData.occupied.high}</span>
-            </>} subRow />
-            <InfoRow left="Empty properties" right={<>
-                <span>{residentialData.properties.low - residentialData.occupied.low}</span>
-                <span>{residentialData.properties.medium - residentialData.occupied.medium}</span>
-                <span>{residentialData.properties.high - residentialData.occupied.high}</span>
-            </>} />
-            <InfoRow 
-                left={<>No demand at {residentialData.freeRatio}%</>}
-                right={<>
-                    <span>{Math.max(1, Math.floor(residentialData.freeRatio * residentialData.properties.low / 100))}</span>
-                    <span>{Math.max(1, Math.floor(residentialData.freeRatio * residentialData.properties.medium / 100))}</span>
-                    <span>{Math.max(1, Math.floor(residentialData.freeRatio * residentialData.properties.high / 100))}</span>
-                </>}
-                subRow
-            />
-            <InfoRow left="BUILDING DEMAND" right={<>
-                <span>{Math.max(0, Math.floor((1 - (residentialData.properties.low - residentialData.occupied.low) / Math.max(1, Math.floor(residentialData.freeRatio * residentialData.properties.low / 100))) * 100))}%</span>
-                <span>{Math.max(0, Math.floor((1 - (residentialData.properties.medium - residentialData.occupied.medium) / Math.max(1, Math.floor(residentialData.freeRatio * residentialData.properties.medium / 100))) * 100))}%</span>
-                <span>{Math.max(0, Math.floor((1 - (residentialData.properties.high - residentialData.occupied.high) / Math.max(1, Math.floor(residentialData.freeRatio * residentialData.properties.high / 100))) * 100))}%</span>
-            </>} />
-        </InfoSection>
-    );
+    if (!residentialData) {
+        return (
+            <Panel title="RESIDENTIAL_DATA" onClose={onClose}>
+                <LocalizedString id="ERROR_LOADING_DATA" />
+            </Panel>
+        );
+    }
 
     return (
-        <Panel title="Residential Data" focusKey={focusKey} onClose={onClose}>
-            <BuildingDemandSection />
-            
-            <InfoSection>
-                <InfoRow left="STUDY POSITIONS" right={residentialData.studyPositions} />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow 
-                    left="HAPPINESS" 
-                    right={`${residentialData.happiness.current}`}
-                    tooltip={`${residentialData.happiness.neutral} is neutral`}
-                />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow 
-                    left="UNEMPLOYMENT" 
-                    right={`${residentialData.unemployment.current}%`}
-                    tooltip={`${(residentialData.unemployment.neutral / 10).toFixed(1)}% is neutral`}
-                />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow 
-                    left="HOMELESS" 
-                    right={residentialData.homeless}
-                    tooltip={`${residentialData.homelessThreshold} is neutral for ${residentialData.households} households`}
-                />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow 
-                    left="TAX RATE (weighted)" 
-                    right={`${(residentialData.taxRate / 10).toFixed(1)}%`}
-                    tooltip="10% is neutral"
-                />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow left="HOUSEHOLD DEMAND" right={`${residentialData.householdDemand}%`} />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow left="STUDENT CHANCE" right={`${residentialData.studentChance}%`} />
-            </InfoSection>
+        <Panel title="RESIDENTIAL_DATA" onClose={onClose}>
+            <InputActionHints />
+            <Scrollable style={{ maxHeight: `${30 * rem}px` }}>
+                <InfoSection>
+                    <InfoRow left="" right={<><span><LocalizedString id="LOW" /></span><span><LocalizedString id="MEDIUM" /></span><span><LocalizedString id="HIGH" /></span></>} uppercase />
+                    <InfoRow 
+                        left={<LocalizedString id="TOTAL_PROPERTIES" />} 
+                        right={<>
+                            <span>{useFormattedLargeNumber(residentialData.properties.low)}</span>
+                            <span>{useFormattedLargeNumber(residentialData.properties.medium)}</span>
+                            <span>{useFormattedLargeNumber(residentialData.properties.high)}</span>
+                        </>} 
+                    />
+                    <InfoRow 
+                        left={<LocalizedString id="OCCUPIED_PROPERTIES" />} 
+                        right={<>
+                            <span>{useFormattedLargeNumber(residentialData.occupied.low)}</span>
+                            <span>{useFormattedLargeNumber(residentialData.occupied.medium)}</span>
+                            <span>{useFormattedLargeNumber(residentialData.occupied.high)}</span>
+                        </>} 
+                        subRow 
+                    />
+                    <InfoRow 
+                        left={<LocalizedString id="EMPTY_PROPERTIES" />} 
+                        right={<>
+                            <span>{useFormattedLargeNumber(residentialData.properties.low - residentialData.occupied.low)}</span>
+                            <span>{useFormattedLargeNumber(residentialData.properties.medium - residentialData.occupied.medium)}</span>
+                            <span>{useFormattedLargeNumber(residentialData.properties.high - residentialData.occupied.high)}</span>
+                        </>} 
+                    />
+                </InfoSection>
+                <InfoSection>
+                    <Tooltip tooltip={<LocalizedString id="FREE_RATIO_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="FREE_RATIO" />} 
+                            right={<LocalizedNumber value={residentialData.freeRatio} />} 
+                        />
+                    </Tooltip>
+                    <Tooltip tooltip={<LocalizedString id="HOUSEHOLD_DEMAND_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="HOUSEHOLD_DEMAND" />} 
+                            right={<LocalizedNumber value={residentialData.householdDemand} />} 
+                        />
+                    </Tooltip>
+                </InfoSection>
+                <InfoSection>
+                    <InfoRow 
+                        left={<LocalizedString id="STUDY_POSITIONS" />} 
+                        right={useFormattedLargeNumber(residentialData.studyPositions)} 
+                    />
+                    <Tooltip tooltip={<LocalizedString id="STUDENT_CHANCE_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="STUDENT_CHANCE" />} 
+                            right={<LocalizedNumber value={residentialData.studentChance} />} 
+                        />
+                    </Tooltip>
+                </InfoSection>
+                <InfoSection>
+                    <Tooltip tooltip={<LocalizedString id="HAPPINESS_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="HAPPINESS" />} 
+                            right={<LocalizedNumber value={residentialData.happiness.current} />} 
+                        />
+                    </Tooltip>
+                </InfoSection>
+                <InfoSection>
+                    <Tooltip tooltip={<LocalizedString id="UNEMPLOYMENT_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="UNEMPLOYMENT" />} 
+                            right={<LocalizedNumber value={residentialData.unemployment.current} />} 
+                        />
+                    </Tooltip>
+                </InfoSection>
+                <InfoSection>
+                    <Tooltip tooltip={<LocalizedString id="HOMELESS_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="HOMELESS" />} 
+                            right={useFormattedLargeNumber(residentialData.homeless)} 
+                        />
+                    </Tooltip>
+                </InfoSection>
+                <InfoSection>
+                    <Tooltip tooltip={<LocalizedString id="TAX_RATE_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="TAX_RATE" />} 
+                            right={<LocalizedNumber value={residentialData.taxRate} />} 
+                        />
+                    </Tooltip>
+                </InfoSection>
+            </Scrollable>
         </Panel>
     );
 };

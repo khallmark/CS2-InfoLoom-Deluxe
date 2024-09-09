@@ -2,9 +2,11 @@ using Colossal.UI.Binding;
 using Game;
 using Game.Simulation;
 using Game.UI;
+using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -16,49 +18,115 @@ namespace InfoLoom.Systems
         private RawValueBinding m_uiResidentialDemand;
         private NativeArray<float> m_ResidentialDemand;
 
+        private const string LOG_TAG = "[InfoLoom] ResidentialDemandUISystem: ";
+
         public override GameMode gameMode => GameMode.Game;
 
         protected override void OnCreate()
         {
-            base.OnCreate();
-            m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-            m_ResidentialDemandSystem = World.GetOrCreateSystemManaged<ResidentialDemandSystem>();
+            try
+            {
+                base.OnCreate();
+                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                m_ResidentialDemandSystem = World.GetOrCreateSystemManaged<ResidentialDemandSystem>();
 
-            AddBinding(m_uiResidentialDemand = new RawValueBinding("cityInfo", "ilResidential", UpdateResidentialDemand));
+                AddBinding(m_uiResidentialDemand = new RawValueBinding("cityInfo", "ilResidential", UpdateResidentialDemand));
 
-            m_ResidentialDemand = new NativeArray<float>(3, Allocator.Persistent);
+                m_ResidentialDemand = new NativeArray<float>(3, Allocator.Persistent);
+
+                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         protected override void OnUpdate()
         {
-            if (m_SimulationSystem.frameIndex % 128 != 88)
-                return;
+            try
+            {
+                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 88)
+                    return;
 
-            base.OnUpdate();
+                base.OnUpdate();
 
-            m_ResidentialDemand[0] = m_ResidentialDemandSystem.residentialLowDemand;
-            m_ResidentialDemand[1] = m_ResidentialDemandSystem.residentialMediumDemand;
-            m_ResidentialDemand[2] = m_ResidentialDemandSystem.residentialHighDemand;
+                UpdateResidentialData();
 
-            m_uiResidentialDemand.Update();
+                m_uiResidentialDemand.Update();
+
+                if (Debug.isDebugBuild)
+                    Debug.Log($"{LOG_TAG}Updated residential demand data. Low Demand: {m_ResidentialDemand[0]}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
+                Debug.LogException(e);
+            }
+        }
+
+        private void UpdateResidentialData()
+        {
+            try
+            {
+                if (m_ResidentialDemandSystem == null)
+                {
+                    Debug.LogWarning($"{LOG_TAG}ResidentialDemandSystem is null");
+                    return;
+                }
+
+                m_ResidentialDemand[0] = m_ResidentialDemandSystem.residentialLowDemand;
+                m_ResidentialDemand[1] = m_ResidentialDemandSystem.residentialMediumDemand;
+                m_ResidentialDemand[2] = m_ResidentialDemandSystem.residentialHighDemand;
+
+                if (Debug.isDebugBuild)
+                    Debug.Log($"{LOG_TAG}Residential data updated successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"{LOG_TAG}Error updating residential data: {e.Message}");
+            }
         }
 
         private void UpdateResidentialDemand(IJsonWriter writer)
         {
-            writer.TypeBegin("ResidentialDemand");
-            writer.PropertyName("lowDemand");
-            writer.Write(m_ResidentialDemand[0]);
-            writer.PropertyName("mediumDemand");
-            writer.Write(m_ResidentialDemand[1]);
-            writer.PropertyName("highDemand");
-            writer.Write(m_ResidentialDemand[2]);
-            writer.TypeEnd();
+            try
+            {
+                writer.TypeBegin("ResidentialDemand");
+                writer.PropertyName("lowDemand");
+                writer.Write(m_ResidentialDemand[0]);
+                writer.PropertyName("mediumDemand");
+                writer.Write(m_ResidentialDemand[1]);
+                writer.PropertyName("highDemand");
+                writer.Write(m_ResidentialDemand[2]);
+                writer.TypeEnd();
+
+                if (Debug.isDebugBuild)
+                    Debug.Log($"{LOG_TAG}Residential demand data written to JSON successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error writing residential demand data to JSON: {e.Message}");
+                Debug.LogException(e);
+            }
         }
 
         protected override void OnDestroy()
         {
-            m_ResidentialDemand.Dispose();
-            base.OnDestroy();
+            try
+            {
+                if (m_ResidentialDemand.IsCreated)
+                    m_ResidentialDemand.Dispose();
+                
+                base.OnDestroy();
+                Debug.Log($"{LOG_TAG}System destroyed and resources cleaned up successfully");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
+                Debug.LogException(e);
+            }
         }
     }
 }

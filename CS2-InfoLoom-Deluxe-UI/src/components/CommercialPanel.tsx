@@ -1,7 +1,9 @@
-import React from 'react';
-import { Panel, InfoRow, InfoSection } from "cs2/ui";
+import React, { useState } from 'react';
+import { Panel, InfoRow, InfoSection, Tooltip, Scrollable } from "cs2/ui";
+import { LocalizedNumber, LocalizedString } from "cs2/l10n";
 import { useDataUpdate } from "../hooks/useDataUpdate";
-import { FocusKey } from "cs2/ui";
+import { useRem, useFormattedLargeNumber } from "cs2/utils";
+import { InputActionHints } from "cs2/input";
 
 interface CommercialData {
     emptyBuildings: number;
@@ -14,59 +16,97 @@ interface CommercialData {
 }
 
 interface CommercialPanelProps {
-    focusKey?: FocusKey;
     onClose: () => void;
 }
 
-export const CommercialPanel: React.FC<CommercialPanelProps> = ({ focusKey, onClose }) => {
-    const [commercialData, setCommercialData] = React.useState<CommercialData | null>(null);
+export const CommercialPanel: React.FC<CommercialPanelProps> = ({ onClose }) => {
+    const [commercialData, setCommercialData] = useState<CommercialData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const rem = useRem();
 
-    useDataUpdate("cityInfo.ilCommercial", setCommercialData);
+    useDataUpdate("cityInfo.ilCommercial", (data) => {
+        setCommercialData(data);
+        setIsLoading(false);
+    });
 
-    if (!commercialData) return null;
+    if (isLoading) {
+        return (
+            <Panel title="COMMERCIAL_DATA" onClose={onClose}>
+                <LocalizedString id="LOADING" />
+            </Panel>
+        );
+    }
+
+    if (!commercialData) {
+        return (
+            <Panel title="COMMERCIAL_DATA" onClose={onClose}>
+                <LocalizedString id="ERROR_LOADING_DATA" />
+            </Panel>
+        );
+    }
 
     return (
-        <Panel title="Commercial Data" focusKey={focusKey} onClose={onClose}>
-            <InfoSection>
-                <InfoRow left="EMPTY BUILDINGS" right={commercialData.emptyBuildings} />
-                <InfoRow left="PROPERTYLESS COMPANIES" right={commercialData.propertylessCompanies} />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow 
-                    left={<>AVERAGE TAX RATE<br/><span>10% is the neutral rate</span></>}
-                    right={`${(commercialData.taxRate / 10).toFixed(1)}%`}
-                    tooltip="Average tax rate for commercial zones"
-                />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow left="" right={<><span>Standard</span><span>Leisure</span></>} uppercase />
-                <InfoRow 
-                    left={<>SERVICE UTILIZATION<br/><span>30% is the neutral ratio</span></>}
-                    right={<><span>{commercialData.serviceUtilization.standard}%</span><span>{commercialData.serviceUtilization.leisure}%</span></>}
-                    tooltip="Utilization of commercial services"
-                />
-                <InfoRow 
-                    left={<>SALES CAPACITY<br/><span>100% when capacity = consumption</span></>}
-                    right={<><span>{commercialData.salesCapacity.standard}%</span><span>{commercialData.salesCapacity.leisure}%</span></>}
-                    tooltip="Sales capacity compared to consumption"
-                />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow 
-                    left={<>EMPLOYEE CAPACITY RATIO<br/><span>75% is the neutral ratio</span></>}
-                    right={`${(commercialData.employeeCapacityRatio / 10).toFixed(1)}%`}
-                    tooltip="Ratio of current employees to maximum capacity"
-                />
-            </InfoSection>
-            
-            <InfoSection>
-                <InfoRow left="AVAILABLE WORKFORCE" right="" uppercase />
-                <InfoRow left="Educated" right={commercialData.availableWorkforce.educated} subRow />
-                <InfoRow left="Uneducated" right={commercialData.availableWorkforce.uneducated} subRow />
-            </InfoSection>
+        <Panel title="COMMERCIAL_DATA" onClose={onClose}>
+            <InputActionHints />
+            <Scrollable style={{ maxHeight: `${30 * rem}px` }}>
+                <InfoSection>
+                    <InfoRow 
+                        left={<LocalizedString id="EMPTY_BUILDINGS" />} 
+                        right={useFormattedLargeNumber(commercialData.emptyBuildings)} 
+                    />
+                    <InfoRow 
+                        left={<LocalizedString id="PROPERTYLESS_COMPANIES" />} 
+                        right={useFormattedLargeNumber(commercialData.propertylessCompanies)} 
+                    />
+                </InfoSection>
+                <InfoSection>
+                    <Tooltip tooltip={<LocalizedString id="TAX_RATE_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="TAX_RATE" />} 
+                            right={<LocalizedNumber value={commercialData.taxRate} />} 
+                        />
+                    </Tooltip>
+                </InfoSection>
+                <InfoSection>
+                    <InfoRow 
+                        left={<LocalizedString id="SERVICE_UTILIZATION" />} 
+                        right={<>
+                            <span><LocalizedString id="STANDARD" />: <LocalizedNumber value={commercialData.serviceUtilization.standard} /></span>
+                            <span><LocalizedString id="LEISURE" />: <LocalizedNumber value={commercialData.serviceUtilization.leisure} /></span>
+                        </>} 
+                    />
+                    <InfoRow 
+                        left={<LocalizedString id="SALES_CAPACITY" />} 
+                        right={<>
+                            <span><LocalizedString id="STANDARD" />: <LocalizedNumber value={commercialData.salesCapacity.standard} /></span>
+                            <span><LocalizedString id="LEISURE" />: <LocalizedNumber value={commercialData.salesCapacity.leisure} /></span>
+                        </>} 
+                    />
+                </InfoSection>
+                <InfoSection>
+                    <Tooltip tooltip={<LocalizedString id="EMPLOYEE_CAPACITY_RATIO_DESC" />}>
+                        <InfoRow 
+                            left={<LocalizedString id="EMPLOYEE_CAPACITY_RATIO" />} 
+                            right={<LocalizedNumber value={commercialData.employeeCapacityRatio} />} 
+                        />
+                    </Tooltip>
+                    <InfoRow 
+                        left={<LocalizedString id="AVAILABLE_WORKFORCE" />} 
+                        right="" 
+                        uppercase 
+                    />
+                    <InfoRow 
+                        left={<LocalizedString id="EDUCATED" />} 
+                        right={useFormattedLargeNumber(commercialData.availableWorkforce.educated)} 
+                        subRow 
+                    />
+                    <InfoRow 
+                        left={<LocalizedString id="UNEDUCATED" />} 
+                        right={useFormattedLargeNumber(commercialData.availableWorkforce.uneducated)} 
+                        subRow 
+                    />
+                </InfoSection>
+            </Scrollable>
         </Panel>
     );
 };
