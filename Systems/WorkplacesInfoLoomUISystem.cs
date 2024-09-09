@@ -6,7 +6,6 @@ using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -70,12 +69,11 @@ namespace InfoLoom.Systems
 
                 m_Results = new NativeArray<WorkplacesAtLevelInfo>(7, Allocator.Persistent);
 
-                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+                Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnCreate: {e.Message}");
             }
         }
 
@@ -93,13 +91,11 @@ namespace InfoLoom.Systems
 
                 m_uiResults.Update();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Workplaces information updated successfully");
+                Mod.Log.Debug($"{LOG_TAG}Workplaces information updated successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnUpdate: {e.Message}");
             }
         }
 
@@ -112,13 +108,11 @@ namespace InfoLoom.Systems
                     WriteData(writer, m_Results[i]);
                 writer.ArrayEnd();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Workplaces data written to JSON successfully");
+                Mod.Log.Debug($"{LOG_TAG}Workplaces data written to JSON successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error writing workplaces data to JSON: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error writing workplaces data to JSON: {e.Message}");
             }
         }
 
@@ -166,12 +160,11 @@ namespace InfoLoom.Systems
                     m_Results.Dispose();
                 
                 base.OnDestroy();
-                Debug.Log($"{LOG_TAG}System destroyed and resources cleaned up successfully");
+                Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnDestroy: {e.Message}");
             }
         }
     }

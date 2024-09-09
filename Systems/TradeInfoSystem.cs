@@ -4,7 +4,6 @@ using Unity.Entities;
 using Unity.Collections;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -25,12 +24,11 @@ namespace InfoLoom.Systems
                 m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
                 m_CityQuery = GetEntityQuery(ComponentType.ReadOnly<Game.City.City>());
 
-                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+                Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnCreate: {e.Message}");
             }
         }
 
@@ -45,13 +43,11 @@ namespace InfoLoom.Systems
                 // Here you would update your UI binding
                 // For example: UpdateBinding("economy.tradeInfo", tradeInfo);
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Trade information updated successfully");
+                Mod.Log.Debug($"{LOG_TAG}Trade information updated successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnUpdate: {e.Message}");
             }
         }
 
@@ -62,7 +58,7 @@ namespace InfoLoom.Systems
             {
                 if (!m_CityQuery.TryGetSingletonEntity(out Entity cityEntity))
                 {
-                    Debug.LogWarning($"{LOG_TAG}City entity not found");
+                    Mod.Log.Warning($"{LOG_TAG}City entity not found");
                     return tradeInfo;
                 }
 
@@ -106,13 +102,11 @@ namespace InfoLoom.Systems
                     });
                 }
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Trade info gathered successfully for {tradeInfo.Count} resources");
+                Mod.Log.Debug($"{LOG_TAG}Trade info gathered successfully for {tradeInfo.Count} resources");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error gathering trade info: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error gathering trade info: {e.Message}");
             }
             return tradeInfo;
         }
@@ -122,12 +116,11 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnDestroy();
-                Debug.Log($"{LOG_TAG}System destroyed successfully");
+                Mod.Log.Info($"{LOG_TAG}System destroyed successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnDestroy: {e.Message}");
             }
         }
     }

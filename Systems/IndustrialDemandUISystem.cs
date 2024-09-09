@@ -6,7 +6,6 @@ using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -34,12 +33,11 @@ namespace InfoLoom.Systems
 
                 m_IndustrialData = new NativeArray<float>(10, Allocator.Persistent);
                 
-                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+                Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnCreate: {e.Message}");
             }
         }
 
@@ -56,13 +54,11 @@ namespace InfoLoom.Systems
 
                 m_uiIndustrialDemand.Update();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Updated industrial demand data. Demand: {m_IndustrialData[0]}");
+                Mod.Log.Debug($"{LOG_TAG}Updated industrial demand data. Demand: {m_IndustrialData[0]}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnUpdate: {e.Message}");
             }
         }
 
@@ -72,7 +68,7 @@ namespace InfoLoom.Systems
             {
                 if (m_IndustrialDemandSystem == null)
                 {
-                    Debug.LogWarning($"{LOG_TAG}IndustrialDemandSystem is null");
+                    Mod.Log.Warning($"{LOG_TAG}IndustrialDemandSystem is null");
                     return;
                 }
 
@@ -87,12 +83,11 @@ namespace InfoLoom.Systems
                 m_IndustrialData[8] = m_IndustrialDemandSystem.inputUtilization;
                 m_IndustrialData[9] = m_IndustrialDemandSystem.employeeCapacityRatio[0];
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Industrial data updated successfully");
+                Mod.Log.Debug($"{LOG_TAG}Industrial data updated successfully");
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"{LOG_TAG}Error updating industrial data: {e.Message}");
+                Mod.Log.Warning($"{LOG_TAG}Error updating industrial data: {e.Message}");
             }
         }
 
@@ -123,13 +118,11 @@ namespace InfoLoom.Systems
                 writer.Write(m_IndustrialData[9]);
                 writer.TypeEnd();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Industrial demand data written to JSON successfully");
+                Mod.Log.Debug($"{LOG_TAG}Industrial demand data written to JSON successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error writing industrial demand data to JSON: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error writing industrial demand data to JSON: {e.Message}");
             }
         }
 
@@ -141,12 +134,11 @@ namespace InfoLoom.Systems
                     m_IndustrialData.Dispose();
                 
                 base.OnDestroy();
-                Debug.Log($"{LOG_TAG}System destroyed and resources cleaned up successfully");
+                Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnDestroy: {e.Message}");
             }
         }
     }

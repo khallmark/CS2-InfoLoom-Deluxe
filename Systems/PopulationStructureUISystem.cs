@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -58,12 +57,11 @@ namespace InfoLoom.Systems
                 m_Totals = new NativeArray<int>(10, Allocator.Persistent);
                 m_Results = new NativeArray<PopulationAtAgeInfo>(110, Allocator.Persistent);
 
-                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+                Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnCreate: {e.Message}");
             }
         }
 
@@ -83,13 +81,11 @@ namespace InfoLoom.Systems
                 m_uiTotals.Update();
                 m_uiResults.Update();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Population structure updated successfully");
+                Mod.Log.Debug($"{LOG_TAG}Population structure updated successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnUpdate: {e.Message}");
             }
         }
 
@@ -102,13 +98,11 @@ namespace InfoLoom.Systems
                     writer.Write(m_Totals[i]);
                 writer.ArrayEnd();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Population totals written to JSON successfully");
+                Mod.Log.Debug($"{LOG_TAG}Population totals written to JSON successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error writing population totals to JSON: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error writing population totals to JSON: {e.Message}");
             }
         }
 
@@ -123,13 +117,11 @@ namespace InfoLoom.Systems
                 }
                 writer.ArrayEnd();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Population structure details written to JSON successfully");
+                Mod.Log.Debug($"{LOG_TAG}Population structure details written to JSON successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error writing population structure details to JSON: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error writing population structure details to JSON: {e.Message}");
             }
         }
 
@@ -177,12 +169,11 @@ namespace InfoLoom.Systems
                     m_Results.Dispose();
                 
                 base.OnDestroy();
-                Debug.Log($"{LOG_TAG}System destroyed and resources cleaned up successfully");
+                Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnDestroy: {e.Message}");
             }
         }
     }

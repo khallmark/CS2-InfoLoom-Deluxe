@@ -6,7 +6,6 @@ using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace InfoLoom.Systems
 {
@@ -34,12 +33,11 @@ namespace InfoLoom.Systems
 
                 m_CommercialData = new NativeArray<float>(7, Allocator.Persistent);
                 
-                Debug.Log($"{LOG_TAG}System created and initialized successfully");
+                Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnCreate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnCreate: {e.Message}");
             }
         }
 
@@ -56,13 +54,11 @@ namespace InfoLoom.Systems
 
                 m_uiCommercialDemand.Update();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Updated commercial demand data. Demand: {m_CommercialData[0]}");
+                Mod.Log.Debug($"{LOG_TAG}Updated commercial demand data. Demand: {m_CommercialData[0]}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnUpdate: {e.Message}");
             }
         }
 
@@ -78,12 +74,11 @@ namespace InfoLoom.Systems
                 m_CommercialData[5] = m_CommercialDemandSystem.serviceUtilization.leisure;
                 m_CommercialData[6] = m_CommercialDemandSystem.employeeCapacityRatio;
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Commercial data updated successfully");
+                Mod.Log.Debug($"{LOG_TAG}Commercial data updated successfully");
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"{LOG_TAG}Error updating commercial data: {e.Message}");
+                Mod.Log.Warning($"{LOG_TAG}Error updating commercial data: {e.Message}");
             }
         }
 
@@ -108,13 +103,11 @@ namespace InfoLoom.Systems
                 writer.Write(m_CommercialData[6]);
                 writer.TypeEnd();
 
-                if (Debug.isDebugBuild)
-                    Debug.Log($"{LOG_TAG}Commercial demand data written to JSON successfully");
+                Mod.Log.Debug($"{LOG_TAG}Commercial demand data written to JSON successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error writing commercial demand data to JSON: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error writing commercial demand data to JSON: {e.Message}");
             }
         }
 
@@ -126,12 +119,11 @@ namespace InfoLoom.Systems
                     m_CommercialData.Dispose();
                 
                 base.OnDestroy();
-                Debug.Log($"{LOG_TAG}System destroyed and resources cleaned up successfully");
+                Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnDestroy: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnDestroy: {e.Message}");
             }
         }
     }

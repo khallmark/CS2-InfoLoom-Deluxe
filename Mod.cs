@@ -18,8 +18,6 @@ namespace InfoLoom_Deluxe
 {
     public class Mod : IMod
     {
-        public static readonly string HarmonyId = "Infixo." + nameof(InfoLoom_Deluxe);
-
         // Mod's instance and asset
         public static Mod Instance { get; private set; }
         public static ExecutableAsset ModAsset { get; private set; }
@@ -52,7 +50,6 @@ namespace InfoLoom_Deluxe
 
             InitializeSetting();
             InitializeLocalization();
-            ApplyHarmonyPatches();
             RegisterSystems(updateSystem);
             SetupInputActions();
         }
@@ -68,18 +65,6 @@ namespace InfoLoom_Deluxe
         private void InitializeLocalization()
         {
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(Setting));
-        }
-
-        private void ApplyHarmonyPatches()
-        {
-            var harmony = new Harmony(HarmonyId);
-            harmony.PatchAll(typeof(Mod).Assembly);
-            var patchedMethods = harmony.GetPatchedMethods().ToArray();
-            Log.Info($"Plugin {HarmonyId} made patches! Patched methods: {patchedMethods.Length}");
-            foreach (var patchedMethod in patchedMethods)
-            {
-                Log.Info($"Patched method: {patchedMethod.Module.Name}:{patchedMethod.DeclaringType.Name}.{patchedMethod.Name}");
-            }
         }
 
         private void RegisterSystems(UpdateSystem updateSystem)
@@ -120,9 +105,6 @@ namespace InfoLoom_Deluxe
                 Setting.UnregisterInOptionsUI();
                 Setting = null;
             }
-
-            var harmony = new Harmony(HarmonyId);
-            harmony.UnpatchAll(HarmonyId);
 
             Instance = null;
         }

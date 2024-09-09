@@ -5,7 +5,6 @@ using Game.UI;
 using System;
 using System.Collections.Generic;
 using Unity.Entities;
-using UnityEngine;
 using Colossal.UI.Binding;
 
 namespace InfoLoom_Deluxe.Systems
@@ -22,12 +21,19 @@ namespace InfoLoom_Deluxe.Systems
 
         protected override void OnCreate()
         {
-            base.OnCreate();
-            m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-            m_TradeSystem = World.GetOrCreateSystemManaged<TradeSystem>();
-            m_CityQuery = GetEntityQuery(ComponentType.ReadOnly<Game.City.City>());
-            AddBinding(m_uiConsumptionData = new RawValueBinding("infoLoomPanel", "consumptionData", UpdateConsumptionUI));
-            Debug.Log($"{LOG_TAG}System created and UI binding added");
+            try
+            {
+                base.OnCreate();
+                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                m_TradeSystem = World.GetOrCreateSystemManaged<TradeSystem>();
+                m_CityQuery = GetEntityQuery(ComponentType.ReadOnly<Game.City.City>());
+                AddBinding(m_uiConsumptionData = new RawValueBinding("infoLoomPanel", "consumptionData", UpdateConsumptionUI));
+                Mod.Log.Info($"{LOG_TAG}System created and UI binding added");
+            }
+            catch (Exception e)
+            {
+                Mod.Log.Error($"{LOG_TAG}Error during OnCreate: {e.Message}");
+            }
         }
 
         protected override void OnUpdate()
@@ -38,11 +44,11 @@ namespace InfoLoom_Deluxe.Systems
                     return;
 
                 m_uiConsumptionData.Update();
+                Mod.Log.Debug($"{LOG_TAG}Consumption data updated");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error during OnUpdate: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error during OnUpdate: {e.Message}");
             }
         }
 
@@ -87,19 +93,25 @@ namespace InfoLoom_Deluxe.Systems
                 writer.ArrayEnd();
                 writer.TypeEnd();
 
-                Debug.Log($"{LOG_TAG}Consumption data updated");
+                Mod.Log.Debug($"{LOG_TAG}Consumption data written to JSON successfully");
             }
             catch (Exception e)
             {
-                Debug.LogError($"{LOG_TAG}Error updating consumption data: {e.Message}");
-                Debug.LogException(e);
+                Mod.Log.Error($"{LOG_TAG}Error updating consumption data: {e.Message}");
             }
         }
 
         protected override void OnDestroy()
         {
-            base.OnDestroy();
-            Debug.Log($"{LOG_TAG}System destroyed");
+            try
+            {
+                base.OnDestroy();
+                Mod.Log.Info($"{LOG_TAG}System destroyed");
+            }
+            catch (Exception e)
+            {
+                Mod.Log.Error($"{LOG_TAG}Error during OnDestroy: {e.Message}");
+            }
         }
     }
 }
