@@ -1,14 +1,13 @@
+using System;
+using System.Runtime.CompilerServices;
 using Colossal.UI.Binding;
 using Game;
 using Game.Simulation;
 using Game.UI;
-using System;
-using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 
-namespace InfoLoom.Systems
+namespace InfoLoom_Deluxe.Systems
 {
     [CompilerGenerated]
     public partial class PopulationStructureUISystem : UISystemBase
@@ -23,16 +22,16 @@ namespace InfoLoom.Systems
             public int School4;
             public int Work;
             public int Other;
-            public PopulationAtAgeInfo(int _age) { Age = _age; Total = 0; School1 = 0; School2 = 0; School3 = 0; School4 = 0; Work = 0; Other = 0; }
+            public PopulationAtAgeInfo(int age) { Age = age; Total = 0; School1 = 0; School2 = 0; School3 = 0; School4 = 0; Work = 0; Other = 0; }
         }
 
-        private SimulationSystem m_SimulationSystem;
-        private RawValueBinding m_uiTotals;
-        private RawValueBinding m_uiResults;
-        private EntityQuery m_TimeDataQuery;
-        private EntityQuery m_CitizenQuery;
-        private NativeArray<int> m_Totals;
-        private NativeArray<PopulationAtAgeInfo> m_Results;
+        private SimulationSystem simulationSystem;
+        private RawValueBinding uiTotals;
+        private RawValueBinding uiResults;
+        private EntityQuery timeDataQuery;
+        private EntityQuery citizenQuery;
+        private NativeArray<int> totals;
+        private NativeArray<PopulationAtAgeInfo> results;
 
         private const string LOG_TAG = "[InfoLoom] PopulationStructureUISystem: ";
 
@@ -43,19 +42,19 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnCreate();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_TimeDataQuery = GetEntityQuery(ComponentType.ReadOnly<TimeData>());
-                m_CitizenQuery = GetEntityQuery(new EntityQueryDesc
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                timeDataQuery = GetEntityQuery(ComponentType.ReadOnly<TimeData>());
+                citizenQuery = GetEntityQuery(new EntityQueryDesc
                 {
                     All = new ComponentType[1] { ComponentType.ReadOnly<Citizen>() },
                     None = new ComponentType[2] { ComponentType.ReadOnly<Deleted>(), ComponentType.ReadOnly<Temp>() }
                 });
 
-                AddBinding(m_uiTotals = new RawValueBinding("populationInfo", "structureTotals", UpdateTotals));
-                AddBinding(m_uiResults = new RawValueBinding("populationInfo", "structureDetails", UpdateResults));
+                AddBinding(uiTotals = new RawValueBinding("populationInfo", "structureTotals", UpdateTotals));
+                AddBinding(uiResults = new RawValueBinding("populationInfo", "structureDetails", UpdateResults));
 
-                m_Totals = new NativeArray<int>(10, Allocator.Persistent);
-                m_Results = new NativeArray<PopulationAtAgeInfo>(110, Allocator.Persistent);
+                totals = new NativeArray<int>(10, Allocator.Persistent);
+                results = new NativeArray<PopulationAtAgeInfo>(110, Allocator.Persistent);
 
                 Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
@@ -69,7 +68,7 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 44)
+                if (simulationSystem == null || simulationSystem.frameIndex % 128 != 44)
                     return;
 
                 base.OnUpdate();
@@ -78,8 +77,8 @@ namespace InfoLoom.Systems
                 // Implement population structure calculation here
                 // This part needs to be implemented based on your specific requirements
 
-                m_uiTotals.Update();
-                m_uiResults.Update();
+                uiTotals.Update();
+                uiResults.Update();
 
                 Mod.Log.Debug($"{LOG_TAG}Population structure updated successfully");
             }
@@ -93,9 +92,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                writer.ArrayBegin(m_Totals.Length);
-                for (int i = 0; i < m_Totals.Length; i++)
-                    writer.Write(m_Totals[i]);
+                writer.ArrayBegin(totals.Length);
+                for (int i = 0; i < totals.Length; i++)
+                    writer.Write(totals[i]);
                 writer.ArrayEnd();
 
                 Mod.Log.Debug($"{LOG_TAG}Population totals written to JSON successfully");
@@ -110,10 +109,10 @@ namespace InfoLoom.Systems
         {
             try
             {
-                writer.ArrayBegin(m_Results.Length);
-                for (int i = 0; i < m_Results.Length; i++)
+                writer.ArrayBegin(results.Length);
+                for (int i = 0; i < results.Length; i++)
                 {
-                    WriteData(writer, m_Results[i]);
+                    WriteData(writer, results[i]);
                 }
                 writer.ArrayEnd();
 
@@ -149,13 +148,13 @@ namespace InfoLoom.Systems
 
         private void ResetResults()
         {
-            for (int i = 0; i < m_Totals.Length; i++)
+            for (int i = 0; i < totals.Length; i++)
             {
-                m_Totals[i] = 0;
+                totals[i] = 0;
             }
-            for (int i = 0; i < m_Results.Length; i++)
+            for (int i = 0; i < results.Length; i++)
             {
-                m_Results[i] = new PopulationAtAgeInfo(i);
+                results[i] = new PopulationAtAgeInfo(i);
             }
         }
 
@@ -163,11 +162,11 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_Totals.IsCreated)
-                    m_Totals.Dispose();
-                if (m_Results.IsCreated)
-                    m_Results.Dispose();
-                
+                if (totals.IsCreated)
+                    totals.Dispose();
+                if (results.IsCreated)
+                    results.Dispose();
+
                 base.OnDestroy();
                 Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }

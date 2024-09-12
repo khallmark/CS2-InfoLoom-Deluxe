@@ -1,17 +1,19 @@
-using Game.Economy;
-using Game.Simulation;
-using Unity.Entities;
-using Unity.Collections;
 using System;
 using System.Collections.Generic;
+using Game;
+using Game.City;
+using Game.Economy;
+using Game.Prefabs;
+using Game.Simulation;
+using Unity.Entities;
 
-namespace InfoLoom.Systems
+namespace InfoLoom_Deluxe.Systems
 {
     public partial class TradeInfoSystem : GameSystemBase
     {
-        private TradeSystem m_TradeSystem;
-        private SimulationSystem m_SimulationSystem;
-        private EntityQuery m_CityQuery;
+        private TradeSystem tradeSystem;
+        private SimulationSystem simulationSystem;
+        private EntityQuery cityQuery;
 
         private const string LOG_TAG = "[InfoLoom] TradeInfoSystem: ";
 
@@ -20,9 +22,9 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnCreate();
-                m_TradeSystem = World.GetOrCreateSystemManaged<TradeSystem>();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_CityQuery = GetEntityQuery(ComponentType.ReadOnly<Game.City.City>());
+                tradeSystem = World.GetOrCreateSystemManaged<TradeSystem>();
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                cityQuery = GetEntityQuery(ComponentType.ReadOnly<Game.City.City>());
 
                 Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
@@ -36,7 +38,7 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 0) 
+                if (simulationSystem == null || simulationSystem.frameIndex % 128 != 0)
                     return;
 
                 var tradeInfo = GatherTradeInfo();
@@ -56,9 +58,9 @@ namespace InfoLoom.Systems
             var tradeInfo = new List<TradeInfo>();
             try
             {
-                if (!m_CityQuery.TryGetSingletonEntity(out Entity cityEntity))
+                if (!cityQuery.TryGetSingletonEntity(out Entity cityEntity))
                 {
-                    Mod.Log.Warning($"{LOG_TAG}City entity not found");
+                    Mod.Log.Warn($"{LOG_TAG}City entity not found");
                     return tradeInfo;
                 }
 
@@ -69,17 +71,17 @@ namespace InfoLoom.Systems
                     if (resource == Resource.None) continue;
 
                     int resourceIndex = EconomyUtils.GetResourceIndex(resource);
-                    float internalSupply = m_TradeSystem.GetResourceAmount(resourceIndex);
-                    float importExport = m_TradeSystem.GetTradeBalance(resourceIndex);
-                    
-                    var tradeCost = m_TradeSystem.GetTradeCost(resource);
-                    var resourceData = m_TradeSystem.GetResourceData(resource);
+                    float internalSupply = tradeSystem.GetResourceAmount(resourceIndex);
+                    float importExport = tradeSystem.GetTradeBalance(resourceIndex);
+
+                    var tradeCost = tradeSystem.GetTradeCost(resource);
+                    var resourceData = tradeSystem.GetResourceData(resource);
 
                     var transportCosts = new Dictionary<OutsideConnectionTransferType, float>();
                     foreach (OutsideConnectionTransferType type in Enum.GetValues(typeof(OutsideConnectionTransferType)))
                     {
                         if (type == OutsideConnectionTransferType.None) continue;
-                        transportCosts[type] = m_TradeSystem.GetTradePrice(resource, type, true, cityEffects);
+                        transportCosts[type] = tradeSystem.GetTradePrice(resource, type, true, cityEffects);
                     }
 
                     tradeInfo.Add(new TradeInfo
@@ -89,16 +91,16 @@ namespace InfoLoom.Systems
                         ImportExport = importExport,
                         BuyPrice = tradeCost.m_BuyCost,
                         SellPrice = tradeCost.m_SellCost,
-                        LocalDemand = m_TradeSystem.GetLocalDemand(resourceIndex),
-                        GlobalDemand = m_TradeSystem.GetGlobalDemand(resourceIndex),
-                        ProductionRate = m_TradeSystem.GetProductionRate(resourceIndex),
-                        StorageCapacity = m_TradeSystem.GetStorageCapacity(resourceIndex),
-                        TradeBalance = m_TradeSystem.GetTradeBalance(resourceIndex),
+                        LocalDemand = tradeSystem.GetLocalDemand(resourceIndex),
+                        GlobalDemand = tradeSystem.GetGlobalDemand(resourceIndex),
+                        ProductionRate = tradeSystem.GetProductionRate(resourceIndex),
+                        StorageCapacity = tradeSystem.GetStorageCapacity(resourceIndex),
+                        TradeBalance = tradeSystem.GetTradeBalance(resourceIndex),
                         Weight = resourceData.m_Weight,
                         TransportCosts = transportCosts,
                         CityModifierEffect = CityUtils.GetModifierEffect(cityEffects, CityModifierType.ImportCost),
                         TradeCooldown = TradeSystem.kTransferCooldown,
-                        HistoricalData = m_TradeSystem.GetHistoricalTradeBalance(resourceIndex)
+                        HistoricalData = tradeSystem.GetHistoricalTradeBalance(resourceIndex)
                     });
                 }
 

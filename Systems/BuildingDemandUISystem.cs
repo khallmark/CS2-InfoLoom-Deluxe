@@ -1,21 +1,23 @@
+using System;
+using System.Runtime.CompilerServices;
 using Colossal.UI.Binding;
 using Game;
 using Game.Simulation;
 using Game.UI;
-using System;
-using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace InfoLoom.Systems
+namespace InfoLoom_Deluxe.Systems
 {
     [CompilerGenerated]
     public partial class BuildingDemandUISystem : UISystemBase
     {
-        private SimulationSystem m_SimulationSystem;
-        private BuildingDemandSystem m_BuildingDemandSystem;
-        private RawValueBinding m_uiBuildingDemand;
-        private NativeArray<float> m_BuildingDemand;
+        private SimulationSystem simulationSystem;
+        private ResidentialDemandSystem residentialDemandSystem;
+        private CommercialDemandSystem commercialDemandSystem;
+        private IndustrialDemandSystem industrialDemandSystem;
+        private RawValueBinding uiBuildingDemand;
+        private NativeArray<int> buildingDemand;
 
         private const string LOG_TAG = "[InfoLoom] BuildingDemandUISystem: ";
 
@@ -26,13 +28,15 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnCreate();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_BuildingDemandSystem = World.GetOrCreateSystemManaged<BuildingDemandSystem>();
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                residentialDemandSystem = World.GetOrCreateSystemManaged<ResidentialDemandSystem>();
+                commercialDemandSystem = World.GetOrCreateSystemManaged<CommercialDemandSystem>();
+                industrialDemandSystem = World.GetOrCreateSystemManaged<IndustrialDemandSystem>();
 
-                AddBinding(m_uiBuildingDemand = new RawValueBinding("cityInfo", "ilBuildingDemand", UpdateBuildingDemand));
+                AddBinding(uiBuildingDemand = new RawValueBinding("cityInfo", "ilBuildingDemand", UpdateBuildingDemand));
 
-                m_BuildingDemand = new NativeArray<float>(7, Allocator.Persistent);
-                
+                buildingDemand = new NativeArray<int>(7, Allocator.Persistent);
+
                 Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
             catch (Exception e)
@@ -45,14 +49,14 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 77)
+                if (simulationSystem == null || simulationSystem.frameIndex % 128 != 77)
                     return;
 
                 base.OnUpdate();
 
                 UpdateBuildingDemandData();
 
-                m_uiBuildingDemand.Update();
+                uiBuildingDemand.Update();
 
                 Mod.Log.Debug($"{LOG_TAG}Updated building demand data");
             }
@@ -66,25 +70,25 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_BuildingDemandSystem == null)
+                if (residentialDemandSystem == null || commercialDemandSystem == null || industrialDemandSystem == null)
                 {
-                    Mod.Log.Warning($"{LOG_TAG}BuildingDemandSystem is null");
+                    Mod.Log.Warn($"{LOG_TAG}One or more demand systems are null");
                     return;
                 }
 
-                m_BuildingDemand[0] = m_BuildingDemandSystem.residentialLowDemand;
-                m_BuildingDemand[1] = m_BuildingDemandSystem.residentialMediumDemand;
-                m_BuildingDemand[2] = m_BuildingDemandSystem.residentialHighDemand;
-                m_BuildingDemand[3] = m_BuildingDemandSystem.commercialDemand;
-                m_BuildingDemand[4] = m_BuildingDemandSystem.industrialDemand;
-                m_BuildingDemand[5] = m_BuildingDemandSystem.officeDemand;
-                m_BuildingDemand[6] = m_BuildingDemandSystem.storageDemand;
+                buildingDemand[0] = residentialDemandSystem.buildingDemand.z; // low res
+                buildingDemand[1] = residentialDemandSystem.buildingDemand.y; // med res
+                buildingDemand[2] = residentialDemandSystem.buildingDemand.x; // high res
+                buildingDemand[3] = commercialDemandSystem.buildingDemand; // commercial
+                buildingDemand[4] = industrialDemandSystem.industrialBuildingDemand; // industry
+                buildingDemand[5] = industrialDemandSystem.storageBuildingDemand; // storage
+                buildingDemand[6] = industrialDemandSystem.officeBuildingDemand; // office
 
                 Mod.Log.Debug($"{LOG_TAG}Building demand data updated successfully");
             }
             catch (Exception e)
             {
-                Mod.Log.Warning($"{LOG_TAG}Error updating building demand data: {e.Message}");
+                Mod.Log.Warn($"{LOG_TAG}Error updating building demand data: {e.Message}");
             }
         }
 
@@ -92,9 +96,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                writer.ArrayBegin(m_BuildingDemand.Length);
-                for (int i = 0; i < m_BuildingDemand.Length; i++)
-                    writer.Write(m_BuildingDemand[i]);
+                writer.ArrayBegin(buildingDemand.Length);
+                for (int i = 0; i < buildingDemand.Length; i++)
+                    writer.Write(buildingDemand[i]);
                 writer.ArrayEnd();
 
                 Mod.Log.Debug($"{LOG_TAG}Building demand data written to JSON successfully");
@@ -109,9 +113,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_BuildingDemand.IsCreated)
-                    m_BuildingDemand.Dispose();
-                
+                if (buildingDemand.IsCreated)
+                    buildingDemand.Dispose();
+
                 base.OnDestroy();
                 Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }

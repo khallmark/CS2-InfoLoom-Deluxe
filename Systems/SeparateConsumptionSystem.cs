@@ -1,21 +1,20 @@
+using System;
+using Colossal.UI.Binding;
 using Game;
 using Game.Economy;
 using Game.Simulation;
 using Game.UI;
-using System;
-using System.Collections.Generic;
 using Unity.Entities;
-using Colossal.UI.Binding;
 
 namespace InfoLoom_Deluxe.Systems
 {
     public partial class SeparateConsumptionSystem : UISystemBase
     {
         private const string LOG_TAG = "[InfoLoom] SeparateConsumptionSystem: ";
-        private RawValueBinding m_uiConsumptionData;
-        private SimulationSystem m_SimulationSystem;
-        private TradeSystem m_TradeSystem;
-        private EntityQuery m_CityQuery;
+        private RawValueBinding uiConsumptionData;
+        private SimulationSystem simulationSystem;
+        private TradeSystem tradeSystem;
+        private EntityQuery cityQuery;
 
         public override GameMode gameMode => GameMode.Game;
 
@@ -24,10 +23,10 @@ namespace InfoLoom_Deluxe.Systems
             try
             {
                 base.OnCreate();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_TradeSystem = World.GetOrCreateSystemManaged<TradeSystem>();
-                m_CityQuery = GetEntityQuery(ComponentType.ReadOnly<Game.City.City>());
-                AddBinding(m_uiConsumptionData = new RawValueBinding("infoLoomPanel", "consumptionData", UpdateConsumptionUI));
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                tradeSystem = World.GetOrCreateSystemManaged<TradeSystem>();
+                cityQuery = GetEntityQuery(ComponentType.ReadOnly<Game.City.City>());
+                AddBinding(uiConsumptionData = new RawValueBinding("infoLoomPanel", "consumptionData", UpdateConsumptionUI));
                 Mod.Log.Info($"{LOG_TAG}System created and UI binding added");
             }
             catch (Exception e)
@@ -40,10 +39,10 @@ namespace InfoLoom_Deluxe.Systems
         {
             try
             {
-                if (m_SimulationSystem.frameIndex % 128 != 0)
+                if (simulationSystem.frameIndex % 128 != 0)
                     return;
 
-                m_uiConsumptionData.Update();
+                uiConsumptionData.Update();
                 Mod.Log.Debug($"{LOG_TAG}Consumption data updated");
             }
             catch (Exception e)
@@ -65,12 +64,12 @@ namespace InfoLoom_Deluxe.Systems
                     if (resource == Resource.None) continue;
 
                     int resourceIndex = EconomyUtils.GetResourceIndex(resource);
-                    float industrialSupply = m_TradeSystem.GetIndustrialSupply(resourceIndex);
-                    float industrialDemand = m_TradeSystem.GetIndustrialDemand(resourceIndex);
-                    float commercialSupply = m_TradeSystem.GetCommercialSupply(resourceIndex);
-                    float commercialDemand = m_TradeSystem.GetCommercialDemand(resourceIndex);
+                    float industrialSupply = tradeSystem.GetIndustrialSupply(resourceIndex);
+                    float industrialDemand = tradeSystem.GetIndustrialDemand(resourceIndex);
+                    float commercialSupply = tradeSystem.GetCommercialSupply(resourceIndex);
+                    float commercialDemand = tradeSystem.GetCommercialDemand(resourceIndex);
                     float surplus = industrialSupply + commercialSupply - industrialDemand - commercialDemand;
-                    float importExport = m_TradeSystem.GetTradeBalance(resourceIndex);
+                    float importExport = tradeSystem.GetTradeBalance(resourceIndex);
 
                     writer.TypeBegin("Good");
                     writer.PropertyName("name");

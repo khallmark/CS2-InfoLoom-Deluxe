@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\khallmark\\source\\repos\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj": {}
+    "C:\\Users\\khallmark\\source\\repos\\khallmark\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj": {}
   },
   "projects": {
-    "C:\\Users\\khallmark\\source\\repos\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj": {
+    "C:\\Users\\khallmark\\source\\repos\\khallmark\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\khallmark\\source\\repos\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj",
+        "projectUniqueName": "C:\\Users\\khallmark\\source\\repos\\khallmark\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj",
         "projectName": "CS2-InfoLoom-Deluxe",
-        "projectPath": "C:\\Users\\khallmark\\source\\repos\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj",
+        "projectPath": "C:\\Users\\khallmark\\source\\repos\\khallmark\\CS2-InfoLoom-Deluxe\\CS2-InfoLoom-Deluxe.csproj",
         "packagesPath": "C:\\Users\\khallmark\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\khallmark\\source\\repos\\CS2-InfoLoom-Deluxe\\obj\\",
+        "outputPath": "C:\\Users\\khallmark\\source\\repos\\khallmark\\CS2-InfoLoom-Deluxe\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CS2-InfoLoom-Deluxe")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3d63871538f57526d4a76fde144543f041b0aa2f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62f349d5f54359c9bedd52fa031266f3231831df")]
 [assembly: System.Reflection.AssemblyProductAttribute("CS2-InfoLoom-Deluxe")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CS2-InfoLoom-Deluxe")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,13 +1,16 @@
-using Colossal.UI.Binding;
-using Game;
-using Game.Simulation;
-using Game.UI;
 using System;
 using System.Runtime.CompilerServices;
+using Colossal.UI.Binding;
+using Game;
+using Game.Citizens;
+using Game.Common;
+using Game.Simulation;
+using Game.Tools;
+using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace InfoLoom.Systems
+namespace InfoLoom_Deluxe.Systems
 {
     [CompilerGenerated]
     public partial class WorkforceInfoLoomUISystem : UISystemBase
@@ -22,13 +25,13 @@ namespace InfoLoom.Systems
             public int Employable;
             public int Outside;
             public int Under;
-            public WorkforceAtLevelInfo(int _level) { Level = _level; Total = 0; Worker = 0; Unemployed = 0; Homeless = 0; Employable = 0; Outside = 0; Under = 0; }
+            public WorkforceAtLevelInfo(int level) { Level = level; Total = 0; Worker = 0; Unemployed = 0; Homeless = 0; Employable = 0; Outside = 0; Under = 0; }
         }
 
-        private SimulationSystem m_SimulationSystem;
-        private EntityQuery m_AllAdultGroup;
-        private RawValueBinding m_uiResults;
-        private NativeArray<WorkforceAtLevelInfo> m_Results;
+        private SimulationSystem simulationSystem;
+        private EntityQuery allAdultGroup;
+        private RawValueBinding uiResults;
+        private NativeArray<WorkforceAtLevelInfo> results;
 
         private const string LOG_TAG = "[InfoLoom] WorkforceInfoLoomUISystem: ";
 
@@ -39,8 +42,8 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnCreate();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_AllAdultGroup = GetEntityQuery(new EntityQueryDesc
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                allAdultGroup = GetEntityQuery(new EntityQueryDesc
                 {
                     All = new ComponentType[1] { ComponentType.ReadOnly<Citizen>() },
                     None = new ComponentType[3]
@@ -51,9 +54,9 @@ namespace InfoLoom.Systems
                     }
                 });
 
-                AddBinding(m_uiResults = new RawValueBinding("populationInfo", "ilWorkforce", UpdateResults));
+                AddBinding(uiResults = new RawValueBinding("populationInfo", "ilWorkforce", UpdateResults));
 
-                m_Results = new NativeArray<WorkforceAtLevelInfo>(6, Allocator.Persistent);
+                results = new NativeArray<WorkforceAtLevelInfo>(6, Allocator.Persistent);
 
                 Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
@@ -67,7 +70,7 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 33)
+                if (simulationSystem == null || simulationSystem.frameIndex % 128 != 33)
                     return;
 
                 ResetResults();
@@ -75,7 +78,7 @@ namespace InfoLoom.Systems
                 // Implement workforce calculation here
                 // This part needs to be implemented based on your specific requirements
 
-                m_uiResults.Update();
+                uiResults.Update();
 
                 Mod.Log.Debug($"{LOG_TAG}Workforce information updated successfully");
             }
@@ -89,9 +92,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                writer.ArrayBegin(m_Results.Length);
-                for (int i = 0; i < m_Results.Length; i++)
-                    WriteData(writer, m_Results[i]);
+                writer.ArrayBegin(results.Length);
+                for (int i = 0; i < results.Length; i++)
+                    WriteData(writer, results[i]);
                 writer.ArrayEnd();
 
                 Mod.Log.Debug($"{LOG_TAG}Workforce data written to JSON successfully");
@@ -128,7 +131,7 @@ namespace InfoLoom.Systems
         {
             for (int i = 0; i < 6; i++)
             {
-                m_Results[i] = new WorkforceAtLevelInfo(i);
+                results[i] = new WorkforceAtLevelInfo(i);
             }
         }
 
@@ -136,9 +139,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_Results.IsCreated)
-                    m_Results.Dispose();
-                
+                if (results.IsCreated)
+                    results.Dispose();
+
                 base.OnDestroy();
                 Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }

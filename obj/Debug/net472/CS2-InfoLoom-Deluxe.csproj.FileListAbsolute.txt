@@ -1,0 +1,6 @@
+C:\Users\khallmark\source\repos\khallmark\CS2-InfoLoom-Deluxe\obj\Debug\net472\CS2-InfoLoom-Deluxe.csproj.AssemblyReference.cache
+C:\Users\khallmark\source\repos\khallmark\CS2-InfoLoom-Deluxe\obj\Debug\net472\CS2-InfoLoom-Deluxe.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\khallmark\source\repos\khallmark\CS2-InfoLoom-Deluxe\obj\Debug\net472\CS2-InfoLoom-Deluxe.AssemblyInfoInputs.cache
+C:\Users\khallmark\source\repos\khallmark\CS2-InfoLoom-Deluxe\obj\Debug\net472\CS2-InfoLoom-Deluxe.AssemblyInfo.cs
+C:\Users\khallmark\source\repos\khallmark\CS2-InfoLoom-Deluxe\obj\Debug\net472\CS2-InfoLoom-Deluxe.csproj.CoreCompileInputs.cache
+C:\Users\khallmark\source\repos\khallmark\CS2-InfoLoom-Deluxe\obj\Debug\net472\CS2-InfoLoom-Deluxe.sourcelink.json

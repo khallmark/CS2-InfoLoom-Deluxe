@@ -1,13 +1,17 @@
-using Colossal.UI.Binding;
-using Game;
-using Game.Simulation;
-using Game.UI;
 using System;
 using System.Runtime.CompilerServices;
+using Colossal.UI.Binding;
+using Game;
+using Game.Buildings;
+using Game.Companies;
+using Game.Prefabs;
+using Game.Simulation;
+using Game.Tools;
+using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace InfoLoom.Systems
+namespace InfoLoom_Deluxe.Systems
 {
     [CompilerGenerated]
     public partial class WorkplacesInfoLoomUISystem : UISystemBase
@@ -25,19 +29,19 @@ namespace InfoLoom.Systems
             public int Employee;
             public int Open;
             public int Commuter;
-            public WorkplacesAtLevelInfo(int _level) 
-            { 
-                Level = _level; 
-                Total = 0; Service = 0; Commercial = 0; Leisure = 0; 
-                Extractor = 0; Industrial = 0; Office = 0; 
-                Employee = 0; Open = 0; Commuter = 0; 
+            public WorkplacesAtLevelInfo(int level)
+            {
+                Level = level;
+                Total = 0; Service = 0; Commercial = 0; Leisure = 0;
+                Extractor = 0; Industrial = 0; Office = 0;
+                Employee = 0; Open = 0; Commuter = 0;
             }
         }
 
-        private SimulationSystem m_SimulationSystem;
-        private EntityQuery m_WorkplaceQuery;
-        private RawValueBinding m_uiResults;
-        private NativeArray<WorkplacesAtLevelInfo> m_Results;
+        private SimulationSystem simulationSystem;
+        private EntityQuery workplaceQuery;
+        private RawValueBinding uiResults;
+        private NativeArray<WorkplacesAtLevelInfo> results;
 
         private const string LOG_TAG = "[InfoLoom] WorkplacesInfoLoomUISystem: ";
 
@@ -48,8 +52,8 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnCreate();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_WorkplaceQuery = GetEntityQuery(new EntityQueryDesc
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                workplaceQuery = GetEntityQuery(new EntityQueryDesc
                 {
                     All = new ComponentType[3]
                     {
@@ -65,9 +69,9 @@ namespace InfoLoom.Systems
                     None = new ComponentType[1] { ComponentType.ReadOnly<Temp>() }
                 });
 
-                AddBinding(m_uiResults = new RawValueBinding("workplaces", "ilWorkplaces", UpdateResults));
+                AddBinding(uiResults = new RawValueBinding("workplaces", "ilWorkplaces", UpdateResults));
 
-                m_Results = new NativeArray<WorkplacesAtLevelInfo>(7, Allocator.Persistent);
+                results = new NativeArray<WorkplacesAtLevelInfo>(7, Allocator.Persistent);
 
                 Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
@@ -81,7 +85,7 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 22)
+                if (simulationSystem == null || simulationSystem.frameIndex % 128 != 22)
                     return;
 
                 ResetResults();
@@ -89,7 +93,7 @@ namespace InfoLoom.Systems
                 // Implement workplace calculation here
                 // This part needs to be implemented based on your specific requirements
 
-                m_uiResults.Update();
+                uiResults.Update();
 
                 Mod.Log.Debug($"{LOG_TAG}Workplaces information updated successfully");
             }
@@ -103,9 +107,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                writer.ArrayBegin(m_Results.Length);
-                for (int i = 0; i < m_Results.Length; i++)
-                    WriteData(writer, m_Results[i]);
+                writer.ArrayBegin(results.Length);
+                for (int i = 0; i < results.Length; i++)
+                    WriteData(writer, results[i]);
                 writer.ArrayEnd();
 
                 Mod.Log.Debug($"{LOG_TAG}Workplaces data written to JSON successfully");
@@ -148,7 +152,7 @@ namespace InfoLoom.Systems
         {
             for (int i = 0; i < 7; i++)
             {
-                m_Results[i] = new WorkplacesAtLevelInfo(i);
+                results[i] = new WorkplacesAtLevelInfo(i);
             }
         }
 
@@ -156,9 +160,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_Results.IsCreated)
-                    m_Results.Dispose();
-                
+                if (results.IsCreated)
+                    results.Dispose();
+
                 base.OnDestroy();
                 Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }

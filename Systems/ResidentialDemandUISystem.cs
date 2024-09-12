@@ -1,24 +1,21 @@
+using System;
+using System.Runtime.CompilerServices;
 using Colossal.UI.Binding;
 using Game;
 using Game.Simulation;
 using Game.UI;
-using System;
-using System.Runtime.CompilerServices;
 using Unity.Collections;
-using Unity.Entities;
-using UnityEngine;
 
-namespace InfoLoom.Systems
+namespace InfoLoom_Deluxe.Systems
 {
     [CompilerGenerated]
     public partial class ResidentialDemandUISystem : UISystemBase
     {
-        private SimulationSystem m_SimulationSystem;
-        private ResidentialDemandSystem m_ResidentialDemandSystem;
-        private RawValueBinding m_uiResidentialDemand;
-        private NativeArray<float> m_ResidentialDemand;
-
         private const string LOG_TAG = "[InfoLoom] ResidentialDemandUISystem: ";
+        private NativeArray<float> residentialDemand;
+        private ResidentialDemandSystem residentialDemandSystem;
+        private SimulationSystem simulationSystem;
+        private RawValueBinding uiResidentialDemand;
 
         public override GameMode gameMode => GameMode.Game;
 
@@ -27,12 +24,13 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnCreate();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_ResidentialDemandSystem = World.GetOrCreateSystemManaged<ResidentialDemandSystem>();
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                residentialDemandSystem = World.GetOrCreateSystemManaged<ResidentialDemandSystem>();
 
-                AddBinding(m_uiResidentialDemand = new RawValueBinding("cityInfo", "ilResidential", UpdateResidentialDemand));
+                AddBinding(uiResidentialDemand =
+                    new RawValueBinding("cityInfo", "ilResidential", UpdateResidentialDemand));
 
-                m_ResidentialDemand = new NativeArray<float>(3, Allocator.Persistent);
+                residentialDemand = new NativeArray<float>(3, Allocator.Persistent);
 
                 Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
@@ -46,16 +44,16 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 88)
+                if (simulationSystem == null || simulationSystem.frameIndex % 128 != 88)
                     return;
 
                 base.OnUpdate();
 
                 UpdateResidentialData();
 
-                m_uiResidentialDemand.Update();
+                uiResidentialDemand.Update();
 
-                Mod.Log.Debug($"{LOG_TAG}Updated residential demand data. Low Demand: {m_ResidentialDemand[0]}");
+                Mod.Log.Debug($"{LOG_TAG}Updated residential demand data. Low Demand: {residentialDemand[0]}");
             }
             catch (Exception e)
             {
@@ -67,21 +65,21 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_ResidentialDemandSystem == null)
+                if (residentialDemandSystem == null)
                 {
-                    Mod.Log.Warning($"{LOG_TAG}ResidentialDemandSystem is null");
+                    Mod.Log.Warn($"{LOG_TAG}ResidentialDemandSystem is null");
                     return;
                 }
 
-                m_ResidentialDemand[0] = m_ResidentialDemandSystem.residentialLowDemand;
-                m_ResidentialDemand[1] = m_ResidentialDemandSystem.residentialMediumDemand;
-                m_ResidentialDemand[2] = m_ResidentialDemandSystem.residentialHighDemand;
+                residentialDemand[0] = residentialDemandSystem.LowDemand;
+                residentialDemand[1] = residentialDemandSystem.MediumDemand;
+                residentialDemand[2] = residentialDemandSystem.HighDemand;
 
                 Mod.Log.Debug($"{LOG_TAG}Residential data updated successfully");
             }
             catch (Exception e)
             {
-                Mod.Log.Warning($"{LOG_TAG}Error updating residential data: {e.Message}");
+                Mod.Log.Warn($"{LOG_TAG}Error updating residential data: {e.Message}");
             }
         }
 
@@ -91,11 +89,11 @@ namespace InfoLoom.Systems
             {
                 writer.TypeBegin("ResidentialDemand");
                 writer.PropertyName("lowDemand");
-                writer.Write(m_ResidentialDemand[0]);
+                writer.Write(residentialDemand[0]);
                 writer.PropertyName("mediumDemand");
-                writer.Write(m_ResidentialDemand[1]);
+                writer.Write(residentialDemand[1]);
                 writer.PropertyName("highDemand");
-                writer.Write(m_ResidentialDemand[2]);
+                writer.Write(residentialDemand[2]);
                 writer.TypeEnd();
 
                 Mod.Log.Debug($"{LOG_TAG}Residential demand data written to JSON successfully");
@@ -110,9 +108,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_ResidentialDemand.IsCreated)
-                    m_ResidentialDemand.Dispose();
-                
+                if (residentialDemand.IsCreated)
+                    residentialDemand.Dispose();
+
                 base.OnDestroy();
                 Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }

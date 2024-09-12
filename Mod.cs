@@ -1,17 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using Unity.Entities;
-using Colossal.IO.AssetDatabase;
+﻿using Colossal.IO.AssetDatabase;
 using Colossal.Logging;
+using CS2_InfoLoom_Deluxe;
 using Game;
+using Game.Input;
 using Game.Modding;
 using Game.SceneFlow;
-using Game.Prefabs;
-using Game.Economy;
-using Game.Common;
-using Game.Input;
-using HarmonyLib;
 using UnityEngine;
 
 namespace InfoLoom_Deluxe
@@ -21,10 +14,10 @@ namespace InfoLoom_Deluxe
         // Mod's instance and asset
         public static Mod Instance { get; private set; }
         public static ExecutableAsset ModAsset { get; private set; }
-        
+
         // Logging
         public static ILog Log = LogManager.GetLogger($"{nameof(InfoLoom_Deluxe)}").SetShowsErrorsInUI(false);
-        
+
         // Setting
         public static Setting Setting { get; private set; }
 
@@ -58,7 +51,7 @@ namespace InfoLoom_Deluxe
         {
             Setting = new Setting(this);
             Setting.RegisterInOptionsUI();
-            Setting._Hidden = false;
+            //Setting._Hidden = false;
             AssetDatabase.global.LoadSettings(nameof(InfoLoom_Deluxe), Setting, new Setting(this));
         }
 

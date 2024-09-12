@@ -1,21 +1,21 @@
+using System;
+using System.Runtime.CompilerServices;
 using Colossal.UI.Binding;
 using Game;
 using Game.Simulation;
 using Game.UI;
-using System;
-using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace InfoLoom.Systems
+namespace InfoLoom_Deluxe.Systems
 {
     [CompilerGenerated]
     public partial class IndustrialDemandUISystem : UISystemBase
     {
-        private SimulationSystem m_SimulationSystem;
-        private IndustrialDemandSystem m_IndustrialDemandSystem;
-        private RawValueBinding m_uiIndustrialDemand;
-        private NativeArray<float> m_IndustrialData;
+        private SimulationSystem simulationSystem;
+        private IndustrialDemandSystem industrialDemandSystem;
+        private RawValueBinding uiIndustrialDemand;
+        private NativeArray<float> industrialData;
 
         private const string LOG_TAG = "[InfoLoom] IndustrialDemandUISystem: ";
 
@@ -26,13 +26,13 @@ namespace InfoLoom.Systems
             try
             {
                 base.OnCreate();
-                m_SimulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
-                m_IndustrialDemandSystem = World.GetOrCreateSystemManaged<IndustrialDemandSystem>();
+                simulationSystem = World.GetOrCreateSystemManaged<SimulationSystem>();
+                industrialDemandSystem = World.GetOrCreateSystemManaged<IndustrialDemandSystem>();
 
-                AddBinding(m_uiIndustrialDemand = new RawValueBinding("cityInfo", "ilIndustrial", UpdateIndustrialDemand));
+                AddBinding(uiIndustrialDemand = new RawValueBinding("cityInfo", "ilIndustrial", UpdateIndustrialDemand));
 
-                m_IndustrialData = new NativeArray<float>(10, Allocator.Persistent);
-                
+                industrialData = new NativeArray<float>(10, Allocator.Persistent);
+
                 Mod.Log.Info($"{LOG_TAG}System created and initialized successfully");
             }
             catch (Exception e)
@@ -45,16 +45,16 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_SimulationSystem == null || m_SimulationSystem.frameIndex % 128 != 110)
+                if (simulationSystem == null || simulationSystem.frameIndex % 128 != 110)
                     return;
 
                 base.OnUpdate();
 
                 UpdateIndustrialData();
 
-                m_uiIndustrialDemand.Update();
+                uiIndustrialDemand.Update();
 
-                Mod.Log.Debug($"{LOG_TAG}Updated industrial demand data. Demand: {m_IndustrialData[0]}");
+                Mod.Log.Debug($"{LOG_TAG}Updated industrial demand data. Demand: {industrialData[0]}");
             }
             catch (Exception e)
             {
@@ -66,22 +66,22 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_IndustrialDemandSystem == null)
+                if (industrialDemandSystem == null)
                 {
                     Mod.Log.Warning($"{LOG_TAG}IndustrialDemandSystem is null");
                     return;
                 }
 
-                m_IndustrialData[0] = m_IndustrialDemandSystem.industrialDemand;
-                m_IndustrialData[1] = m_IndustrialDemandSystem.emptyBuildings[0];
-                m_IndustrialData[2] = m_IndustrialDemandSystem.emptyBuildings[1];
-                m_IndustrialData[3] = m_IndustrialDemandSystem.propertylessCompanies[0];
-                m_IndustrialData[4] = m_IndustrialDemandSystem.propertylessCompanies[1];
-                m_IndustrialData[5] = m_IndustrialDemandSystem.taxRates[0];
-                m_IndustrialData[6] = m_IndustrialDemandSystem.taxRates[1];
-                m_IndustrialData[7] = m_IndustrialDemandSystem.localDemand;
-                m_IndustrialData[8] = m_IndustrialDemandSystem.inputUtilization;
-                m_IndustrialData[9] = m_IndustrialDemandSystem.employeeCapacityRatio[0];
+                industrialData[0] = industrialDemandSystem.industrialDemand;
+                industrialData[1] = industrialDemandSystem.emptyBuildings[0];
+                industrialData[2] = industrialDemandSystem.emptyBuildings[1];
+                industrialData[3] = industrialDemandSystem.propertylessCompanies[0];
+                industrialData[4] = industrialDemandSystem.propertylessCompanies[1];
+                industrialData[5] = industrialDemandSystem.taxRates[0];
+                industrialData[6] = industrialDemandSystem.taxRates[1];
+                industrialData[7] = industrialDemandSystem.localDemand;
+                industrialData[8] = industrialDemandSystem.inputUtilization;
+                industrialData[9] = industrialDemandSystem.employeeCapacityRatio[0];
 
                 Mod.Log.Debug($"{LOG_TAG}Industrial data updated successfully");
             }
@@ -97,25 +97,25 @@ namespace InfoLoom.Systems
             {
                 writer.TypeBegin("IndustrialDemand");
                 writer.PropertyName("demand");
-                writer.Write(m_IndustrialData[0]);
+                writer.Write(industrialData[0]);
                 writer.PropertyName("emptyBuildingsIndustrial");
-                writer.Write(m_IndustrialData[1]);
+                writer.Write(industrialData[1]);
                 writer.PropertyName("emptyBuildingsOffice");
-                writer.Write(m_IndustrialData[2]);
+                writer.Write(industrialData[2]);
                 writer.PropertyName("propertylessCompaniesIndustrial");
-                writer.Write(m_IndustrialData[3]);
+                writer.Write(industrialData[3]);
                 writer.PropertyName("propertylessCompaniesOffice");
-                writer.Write(m_IndustrialData[4]);
+                writer.Write(industrialData[4]);
                 writer.PropertyName("taxRateIndustrial");
-                writer.Write(m_IndustrialData[5]);
+                writer.Write(industrialData[5]);
                 writer.PropertyName("taxRateOffice");
-                writer.Write(m_IndustrialData[6]);
+                writer.Write(industrialData[6]);
                 writer.PropertyName("localDemand");
-                writer.Write(m_IndustrialData[7]);
+                writer.Write(industrialData[7]);
                 writer.PropertyName("inputUtilization");
-                writer.Write(m_IndustrialData[8]);
+                writer.Write(industrialData[8]);
                 writer.PropertyName("employeeCapacityRatio");
-                writer.Write(m_IndustrialData[9]);
+                writer.Write(industrialData[9]);
                 writer.TypeEnd();
 
                 Mod.Log.Debug($"{LOG_TAG}Industrial demand data written to JSON successfully");
@@ -130,9 +130,9 @@ namespace InfoLoom.Systems
         {
             try
             {
-                if (m_IndustrialData.IsCreated)
-                    m_IndustrialData.Dispose();
-                
+                if (industrialData.IsCreated)
+                    industrialData.Dispose();
+
                 base.OnDestroy();
                 Mod.Log.Info($"{LOG_TAG}System destroyed and resources cleaned up successfully");
             }

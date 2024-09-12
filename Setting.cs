@@ -6,17 +6,18 @@ using Game.Modding;
 using Game.Settings;
 using Game.UI;
 using Game.UI.Widgets;
+using InfoLoom_Deluxe;
 
 namespace CS2_InfoLoom_Deluxe
 {
     [FileLocation(nameof(CS2_InfoLoom_Deluxe))]
     [SettingsUIGroupOrder(kButtonGroup, kToggleGroup, kSliderGroup, kDropdownGroup, kKeybindingGroup)]
     [SettingsUIShowGroupName(kButtonGroup, kToggleGroup, kSliderGroup, kDropdownGroup, kKeybindingGroup)]
-    [SettingsUIKeyboardAction(Mod.kVectorActionName, ActionType.Vector2, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" }, processors: new string[] { "ScaleVector2(x=100,y=100)" })]
-    [SettingsUIKeyboardAction(Mod.kAxisActionName, ActionType.Axis, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
-    [SettingsUIKeyboardAction(Mod.kButtonActionName, ActionType.Button, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
-    [SettingsUIGamepadAction(Mod.kButtonActionName, ActionType.Button, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
-    [SettingsUIMouseAction(Mod.kButtonActionName, ActionType.Button, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
+    [SettingsUIKeyboardAction(Mod.ButtonActionName, ActionType.Vector2, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" }, processors: new string[] { "ScaleVector2(x=100,y=100)" })]
+    [SettingsUIKeyboardAction(Mod.AxisActionName, ActionType.Axis, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
+    [SettingsUIKeyboardAction(Mod.ButtonActionName, ActionType.Button, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
+    [SettingsUIGamepadAction(Mod.ButtonActionName, ActionType.Button, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
+    [SettingsUIMouseAction(Mod.ButtonActionName, ActionType.Button, usages: new string[] { Usages.kMenuUsage, "TestUsage" }, interactions: new string[] { "UIButton" })]
     public class Setting : ModSetting
     {
         public const string kSection = "Main";
@@ -33,12 +34,12 @@ namespace CS2_InfoLoom_Deluxe
         }
 
         [SettingsUISection(kSection, kButtonGroup)]
-        public bool Button { set { Mod.log.Info("Button clicked"); } }
+        public bool Button { set { Mod.Log.Info("Button clicked"); } }
 
         [SettingsUIButton]
         [SettingsUIConfirmation]
         [SettingsUISection(kSection, kButtonGroup)]
-        public bool ButtonWithConfirmation { set { Mod.log.Info("ButtonWithConfirmation clicked"); } }
+        public bool ButtonWithConfirmation { set { Mod.Log.Info("ButtonWithConfirmation clicked"); } }
 
         [SettingsUISection(kSection, kToggleGroup)]
         public bool Toggle { get; set; }
@@ -54,40 +55,40 @@ namespace CS2_InfoLoom_Deluxe
         [SettingsUISection(kSection, kDropdownGroup)]
         public SomeEnum EnumDropdown { get; set; } = SomeEnum.Value1;
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.Q, Mod.kButtonActionName, shift: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.Q, Mod.ButtonActionName, shift: true)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding KeyboardBinding { get; set; }
 
-        [SettingsUIMouseBinding(BindingMouse.Forward, Mod.kButtonActionName)]
+        [SettingsUIMouseBinding(BindingMouse.Forward, Mod.ButtonActionName)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding MouseBinding { get; set; }
 
-        [SettingsUIGamepadBinding(BindingGamepad.Cross, Mod.kButtonActionName)]
+        [SettingsUIGamepadBinding(BindingGamepad.Cross, Mod.ButtonActionName)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding GamepadBinding { get; set; }
 
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.DownArrow, AxisComponent.Negative, Mod.kAxisActionName, shift: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.DownArrow, AxisComponent.Negative, Mod.AxisActionName, shift: true)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding FloatBindingNegative { get; set; }
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.UpArrow, AxisComponent.Positive, Mod.kAxisActionName, shift: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.UpArrow, AxisComponent.Positive, Mod.AxisActionName, shift: true)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding FloatBindingPositive { get; set; }
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.S, Vector2Component.Down, Mod.kVectorActionName, shift: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.S, Vector2Component.Down, Mod.VectorActionName, shift: true)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding Vector2BindingDown { get; set; }
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.W, Vector2Component.Up, Mod.kVectorActionName, shift: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.W, Vector2Component.Up, Mod.VectorActionName, shift: true)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding Vector2BindingUp { get; set; }
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.A, Vector2Component.Left, Mod.kVectorActionName, shift: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.A, Vector2Component.Left, Mod.VectorActionName, shift: true)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding Vector2BindingLeft { get; set; }
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.D, Vector2Component.Right, Mod.kVectorActionName, shift: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.D, Vector2Component.Right, Mod.VectorActionName, shift: true)]
         [SettingsUISection(kSection, kKeybindingGroup)]
         public ProxyBinding Vector2BindingRight { get; set; }
 
@@ -96,7 +97,7 @@ namespace CS2_InfoLoom_Deluxe
         {
             set
             {
-                Mod.log.Info("Reset key bindings");
+                Mod.Log.Info("Reset key bindings");
                 ResetKeyBindings();
             }
         }
@@ -204,15 +205,15 @@ namespace CS2_InfoLoom_Deluxe
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ResetBindings)), "Reset key bindings" },
                 { m_Setting.GetOptionDescLocaleID(nameof(Setting.ResetBindings)), $"Reset all key bindings of the mod" },
 
-                { m_Setting.GetBindingKeyLocaleID(Mod.kButtonActionName), "Button key" },
+                { m_Setting.GetBindingKeyLocaleID(Mod.ButtonActionName), "Button key" },
 
-                { m_Setting.GetBindingKeyLocaleID(Mod.kAxisActionName, AxisComponent.Negative), "Negative key" },
-                { m_Setting.GetBindingKeyLocaleID(Mod.kAxisActionName, AxisComponent.Positive), "Positive key" },
+                { m_Setting.GetBindingKeyLocaleID(Mod.AxisActionName, AxisComponent.Negative), "Negative key" },
+                { m_Setting.GetBindingKeyLocaleID(Mod.AxisActionName, AxisComponent.Positive), "Positive key" },
 
-                { m_Setting.GetBindingKeyLocaleID(Mod.kVectorActionName, Vector2Component.Down), "Down key" },
-                { m_Setting.GetBindingKeyLocaleID(Mod.kVectorActionName, Vector2Component.Up), "Up key" },
-                { m_Setting.GetBindingKeyLocaleID(Mod.kVectorActionName, Vector2Component.Left), "Left key" },
-                { m_Setting.GetBindingKeyLocaleID(Mod.kVectorActionName, Vector2Component.Right), "Right key" },
+                { m_Setting.GetBindingKeyLocaleID(Mod.VectorActionName, Vector2Component.Down), "Down key" },
+                { m_Setting.GetBindingKeyLocaleID(Mod.VectorActionName, Vector2Component.Up), "Up key" },
+                { m_Setting.GetBindingKeyLocaleID(Mod.VectorActionName, Vector2Component.Left), "Left key" },
+                { m_Setting.GetBindingKeyLocaleID(Mod.VectorActionName, Vector2Component.Right), "Right key" },
 
                 { m_Setting.GetBindingMapLocaleID(), "Mod settings sample" },
             };
