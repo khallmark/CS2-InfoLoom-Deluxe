@@ -1,31 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net472</TargetFramework>
 		<Configurations>Debug;Release</Configurations>
-		
-		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->
+		<LangVersion>11.0</LangVersion>
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
+		<Version>2000</Version>
+		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->
 	</PropertyGroup>
-	
-	<!--Imports must be after PropertyGroup block-->
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
-
 	<ItemGroup>
-		<Reference Include="Colossal.ATL">
-		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.ATL.dll</HintPath>
-		</Reference>
-		<Reference Include="Colossal.CharacterSystem">
-		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.CharacterSystem.dll</HintPath>
-		</Reference>
-		<Reference Include="Colossal.Collections">
-		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.Collections.dll</HintPath>
-		</Reference>
-		<Reference Include="Colossal.Mathematics">
-		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.Mathematics.dll</HintPath>
-		</Reference>
 		<Reference Include="Game">
 			<Private>false</Private>
 		</Reference>
@@ -47,6 +32,18 @@
 		<Reference Include="Colossal.Localization">
 			<Private>false</Private>
 		</Reference>
+		<Reference Include="Colossal.Collections">
+		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.Collections.dll</HintPath>
+		</Reference>
+		<Reference Include="Colossal.Mathematics">
+		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.Mathematics.dll</HintPath>
+		</Reference>
+		<Reference Include="Colossal.ATL">
+		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.ATL.dll</HintPath>
+		</Reference>
+		<Reference Include="Colossal.CharacterSystem">
+		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.CharacterSystem.dll</HintPath>
+		</Reference>
 		<Reference Include="Unity.Burst.Unsafe">
 		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Unity.Burst.Unsafe.dll</HintPath>
 		</Reference>
@@ -61,9 +58,6 @@
 		</Reference>
 		<Reference Include="Unity.InputSystem">
 			<Private>false</Private>
-		</Reference>
-		<Reference Include="UnityEngine">
-		  <HintPath>D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed\UnityEngine.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
 			<Private>false</Private>
@@ -81,7 +75,6 @@
 			<Private>false</Private>
 		</Reference>
 	</ItemGroup>
-
 	<ItemGroup>
 		<Reference Update="System">
 			<Private>false</Private>
@@ -93,10 +86,16 @@
 			<Private>false</Private>
 		</Reference>
 	</ItemGroup>
-
 	<ItemGroup>
 		<None Include="$(ModPropsFile)" Link="Properties\Mod.props" />
 		<None Include="$(ModTargetsFile)" Link="Properties\Mod.targets" />
 	</ItemGroup>
-
+	<ItemGroup>
+	  <EmbeddedResource Include="ui_src/gooee-menu.json" />
+	  <EmbeddedResource Include="dist/ui.css" />
+	  <EmbeddedResource Include="dist/ui.js" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
+	</ItemGroup>
 </Project>
